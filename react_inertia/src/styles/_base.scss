@@ -1,6 +1,11 @@
 @tailwind base;
 
 :root {
+  // add spacing variables for sidebar components
+  --sidebar-width: 16rem;
+  --sidebar-width-icon: 3rem;
+  --spacing: 0.25rem;
+  // color variables
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);

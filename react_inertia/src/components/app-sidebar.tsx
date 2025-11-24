@@ -1,3 +1,5 @@
+"use client"
+
 // import { dashboard } from "@/routes"
 
 // import { Link } from "@inertiajs/react"

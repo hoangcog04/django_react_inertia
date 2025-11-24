@@ -1,4 +1,4 @@
-// mask as client, refactor later
+// refactor: mask as client, refactor later
 "use client"
 
 import { useSyncExternalStore } from "react"

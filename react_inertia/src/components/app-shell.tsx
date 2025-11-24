@@ -1,8 +1,7 @@
-import { SharedData } from "@/types"
-
 // import { usePage } from "@inertiajs/react"
 
-import { SidebarProvider } from "@/components/ui/sidebar"
+import { SidebarProvider } from "@/contexts/sidebar-provider"
+import { SharedData } from "@/types"
 
 interface AppShellProps {
   children: React.ReactNode
@@ -17,5 +16,5 @@ export function AppShell({ children, variant = "header" }: AppShellProps) {
   }
 
   // temp: always open the sidebar
-  return <SidebarProvider defaultOpen={true}>{children}</SidebarProvider>
+  return <SidebarProvider defaultOpen={false}>{children}</SidebarProvider>
 }
