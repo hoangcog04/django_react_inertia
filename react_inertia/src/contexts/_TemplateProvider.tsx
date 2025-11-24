@@ -1,3 +1,5 @@
+"use client"
+
 // This is a template provider for creating a new context
 import * as React from "react"
 import { Dispatch, SetStateAction } from "react"

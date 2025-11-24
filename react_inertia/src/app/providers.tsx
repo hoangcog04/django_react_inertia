@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
-import CustomToast from "@/components/CustomToast"
+import CustomToast from "@/components/custom-toast"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(

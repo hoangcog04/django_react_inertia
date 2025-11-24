@@ -1,1 +1,7 @@
-export const ROUTES = {}
+export const ROUTES = {
+  home: "/",
+  dashboard: "/dashboard",
+  login: "/login",
+  register: "/register",
+  void: "#",
+}
