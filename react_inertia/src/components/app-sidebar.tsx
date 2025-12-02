@@ -6,7 +6,7 @@
 import Link from "next/link"
 import { ROUTES } from "@/constants"
 import { type NavItem } from "@/types"
-import { BookOpen, Folder, LayoutGrid } from "lucide-react"
+import { BookOpen, Folder, LayoutGrid, Users } from "lucide-react"
 
 import {
   Sidebar,
@@ -28,6 +28,21 @@ const mainNavItems: NavItem[] = [
     title: "Dashboard",
     href: ROUTES.dashboard,
     icon: LayoutGrid,
+  },
+  {
+    title: "Quản lý thành viên",
+    href: ROUTES.void,
+    icon: Users,
+    items: [
+      {
+        title: "Nhóm thành viên",
+        url: ROUTES.user_catalogue,
+      },
+      {
+        title: "Thành viên",
+        url: ROUTES.user,
+      },
+    ],
   },
 ]
 

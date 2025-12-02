@@ -124,6 +124,12 @@ ignore = [
     # of types for comparison.
     # Deactivated because it can make the code slow:
     # https://github.com/astral-sh/ruff/issues/7871
+    # exception string
+    "TRY003",
+    "EM101",
+    # comment code, print
+    "T201",
+    "ERA001",
 ]
 
 [tool.ruff.lint.isort]

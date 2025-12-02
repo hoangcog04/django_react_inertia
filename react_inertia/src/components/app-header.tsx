@@ -4,9 +4,10 @@
 import Link from "next/link"
 import { ROUTES } from "@/constants"
 import { type BreadcrumbItem, type NavItem, type SharedData } from "@/types"
+import { isSameUrl, resolveUrl } from "@/utils/helpers"
 import { BookOpen, Folder, LayoutGrid, Menu, Search } from "lucide-react"
 
-import { cn, isSameUrl, resolveUrl } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 import { useInitials } from "@/hooks/use-initials"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"

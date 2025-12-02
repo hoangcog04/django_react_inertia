@@ -71,3 +71,7 @@ INSTALLED_APPS += ["django_extensions"]
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+# CORS
+# https://github.com/adamchainz/django-cors-headers?tab=readme-ov-file#setup
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True

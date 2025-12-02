@@ -1,7 +1,7 @@
 import { type ComponentPropsWithoutRef } from "react"
 import { type NavItem } from "@/types"
+import { resolveUrl } from "@/utils/helpers"
 
-import { resolveUrl } from "@/lib/utils"
 import {
   SidebarGroup,
   SidebarGroupContent,

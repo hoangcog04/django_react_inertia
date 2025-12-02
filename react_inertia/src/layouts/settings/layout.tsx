@@ -7,8 +7,9 @@ import { ROUTES } from "@/constants"
 // import { show } from '@/routes/two-factor';
 // import { edit as editPassword } from '@/routes/user-password';
 import { type NavItem } from "@/types"
+import { isSameUrl, resolveUrl } from "@/utils/helpers"
 
-import { cn, isSameUrl, resolveUrl } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import Heading from "@/components/heading"

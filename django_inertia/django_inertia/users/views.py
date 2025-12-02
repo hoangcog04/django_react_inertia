@@ -11,6 +11,8 @@ from django_inertia.users.models import User
 
 
 class UserDetailView(LoginRequiredMixin, DetailView):
+    # <app_name>/<model_name>_detail.html
+    # users/user_detail.html
     model = User
     slug_field = "username"
     slug_url_kwarg = "username"

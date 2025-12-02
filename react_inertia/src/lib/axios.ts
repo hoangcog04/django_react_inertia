@@ -1,76 +1,73 @@
-import {
-  clearTokens,
-  getAccessToken,
-  getRefreshToken,
-  setTokens,
-} from "@/utils/token"
-import axios from "axios"
+import { LS_KEYS } from "@/constants"
+import axios, { AxiosError, AxiosResponse } from "axios"
+import { toast } from "react-toastify"
 
-let isRefreshing = false
-let failedQueue: any[] = []
+import { ErrorResponse } from "@/types/common"
 
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) prom.reject(error)
-    else prom.resolve(token)
-  })
-  failedQueue = []
-}
+const FLASH_FROM_SERVER_TITLE = "Thông báo từ hệ thống"
 
 const httpRequest = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
-  headers: { "Content-Type": "application/json" },
+  headers: {
+    "content-type": "application/json",
+  },
 })
 
 httpRequest.interceptors.request.use((config) => {
-  const token = getAccessToken()
-  if (token) config.headers.Authorization = `Bearer ${token}`
+  // const token = localStorage.getItem(LS_KEYS.REFRESH_TOKEN)
+  const token = localStorage.getItem(LS_KEYS.TOKEN)
+  if (token) {
+    // config.headers.Authorization = `Bearer ${token}`
+    config.headers.Authorization = `Token ${token}`
+  }
   return config
 })
 
 httpRequest.interceptors.response.use(
-  (res) => res,
-  async (error) => {
-    const originalRequest = error.config
+  (response: AxiosResponse) => {
+    if (response.data) {
+      if (response.data.flash) {
+        const flash = response.data.flash
+        if (flash.success)
+          toast.success(FLASH_FROM_SERVER_TITLE + ": " + flash.success)
+        if (flash.info) toast.info(FLASH_FROM_SERVER_TITLE + ": " + flash.info)
+        if (flash.warning)
+          toast.warning(FLASH_FROM_SERVER_TITLE + ": " + flash.warning)
+        if (flash.error)
+          toast.error(FLASH_FROM_SERVER_TITLE + ": " + flash.error)
+      }
+      return response.data
+    }
+  },
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise(function (resolve, reject) {
-          failedQueue.push({ resolve, reject })
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`
-            return httpRequest(originalRequest)
-          })
-          .catch((err) => Promise.reject(err))
+  (error: AxiosError<ErrorResponse>) => {
+    const data = error.response?.data
+    const status = error.response?.status
+
+    if (status === 401) {
+      localStorage.removeItem(LS_KEYS.REFRESH_TOKEN)
+      localStorage.removeItem(LS_KEYS.ACCESS_TOKEN)
+
+      return Promise.reject(error.response?.data)
+    }
+
+    if (status === 400) {
+      if (data?.message) {
+        const toastTitle = data.message
       }
 
-      originalRequest._retry = true
-      isRefreshing = true
+      if (data?.extra?.fields) {
+        const fields = data.extra.fields
+        const formatted = []
+        for (const [field, fieldMessages] of Object.entries(fields)) {
+          if (Array.isArray(fieldMessages)) {
+            const fieldMessagesString = fieldMessages.join(", ")
+            formatted.push(`${field}: ${fieldMessagesString}`)
+          }
+        }
+        const toastText = formatted.join("\n")
 
-      try {
-        const refreshToken = getRefreshToken()
-        if (!refreshToken) throw new Error("No refresh token found")
-
-        const res = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
-          { refreshToken }
-        )
-        const { accessToken, refreshToken: newRefreshToken } = res.data
-
-        setTokens(accessToken, newRefreshToken)
-        httpRequest.defaults.headers.common["Authorization"] =
-          `Bearer ${accessToken}`
-        processQueue(null, accessToken)
-
-        originalRequest.headers["Authorization"] = `Bearer ${accessToken}`
-        return httpRequest(originalRequest)
-      } catch (err) {
-        clearTokens()
-        processQueue(err, null)
-        return Promise.reject(err)
-      } finally {
-        isRefreshing = false
+        toast.error(toastText)
       }
     }
 

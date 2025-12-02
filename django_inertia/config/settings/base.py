@@ -85,8 +85,9 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    "django_inertia.users",
     # Your stuff: custom apps go here
+    "django_inertia.common",
+    "django_inertia.users",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -144,6 +145,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    # local apps
+    "django_inertia.common.middlewares.InertiaRequestsMiddleware",
 ]
 
 # STATIC
@@ -287,6 +290,7 @@ SOCIALACCOUNT_FORMS = {"signup": "django_inertia.users.forms.UserSocialSignupFor
 # -------------------------------------------------------------------------------
 # django-rest-framework - https://www.django-rest-framework.org/api-guide/settings/
 REST_FRAMEWORK = {
+    "EXCEPTION_HANDLER": "django_inertia.common.exception_handlers.drf_exception_handler",
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.TokenAuthentication",

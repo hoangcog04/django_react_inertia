@@ -85,4 +85,19 @@
   body {
     @apply bg-background text-foreground;
   }
+  .custom-breadcrumb li + li:before {
+    content: "/";
+    padding: 0 5px;
+    color: #000;
+  }
+  // use > * to avoid bolding pseudo-element
+  .custom-breadcrumb li:last-child > * {
+    font-weight: bold;
+  }
+  .page-wrapper {
+    background-color: #f3f3f4;
+  }
+  .page-container {
+    padding: 20px;
+  }
 }

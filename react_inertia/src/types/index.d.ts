@@ -1,5 +1,6 @@
 import { InertiaLinkProps } from "@inertiajs/react"
 import { LucideIcon } from "lucide-react"
+import { z } from "zod"
 
 export interface Auth {
   user: User
@@ -21,6 +22,11 @@ export interface NavItem {
   href: string
   icon?: LucideIcon | null
   isActive?: boolean
+  items?: SubNavItem[]
+}
+export interface SubNavItem {
+  title: string
+  url: string
 }
 
 export interface SharedData {
@@ -41,4 +47,13 @@ export interface User {
   created_at: string
   updated_at: string
   [key: string]: unknown // This allows for additional properties...
+}
+
+export interface PageConfig {
+  heading: string
+  breadcrumbs: BreadcrumbItem[]
+}
+export interface FormPageConfig<TFormValues> {
+  // schema: z.ZodSchema<TFormValues>
+  defaultValues: TFormValues
 }
