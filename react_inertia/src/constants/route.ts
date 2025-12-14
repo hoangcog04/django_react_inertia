@@ -5,7 +5,7 @@ export const ROUTES = {
   register: "/register",
   user: "/user",
   user_catalogue: "/user_catalogue",
-  user_catalogue_create: "/user_catalogue/create",
+  user_catalogue_create: "/user_catalogue/save",
   // user_catalogue_edit: "/user_catalogue/[id]/edit",
   void: "#",
 }

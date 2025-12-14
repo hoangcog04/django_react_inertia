@@ -1,7 +1,6 @@
 // key, tanstack, service, api, type
-import { TOAST_TEXT } from "@/constants"
+import { PaginationParams, PagingResponse, User } from "@/types"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { toast } from "react-toastify"
 
 import { IUserCatalogueGet, IUserCatalogueSave } from "@/types/schema"
 import httpRequest from "@/lib/axios"
@@ -12,6 +11,12 @@ const saveUserCatalogue = (params: IUserCatalogueSave): Promise<any> => {
 
 const getUserCatalogue = (id: string): Promise<IUserCatalogueGet> => {
   return httpRequest.get(`/user_catalogue/${id}/get/`)
+}
+
+const getUserList = (
+  params?: PaginationParams
+): Promise<PagingResponse<User>> => {
+  return httpRequest.get(`/users/`, { params })
 }
 
 const updateUserCatalogue = (
@@ -26,6 +31,8 @@ export const userCatalogueKeys = {
   save: () => [userCatalogueKeys.key, "save"] as const,
   update: (id: string) => [userCatalogueKeys.key, id, "update"] as const,
   get: (id: string) => [userCatalogueKeys.key, "get", id] as const,
+  user_list: (params?: PaginationParams) =>
+    [userCatalogueKeys.key, "user_list", params] as const,
 }
 
 export const useUserCatalogue = () => {
@@ -48,9 +55,17 @@ export const useUserCatalogue = () => {
     })
   }
 
+  const useGetUserList = (params?: PaginationParams) => {
+    return useQuery({
+      queryKey: userCatalogueKeys.user_list(params),
+      queryFn: () => getUserList(params),
+    })
+  }
+
   return {
     useSaveUserCatalogue,
     useGetUserCatalogue,
     useUpdateUserCatalogue,
+    useGetUserList,
   }
 }

@@ -32,14 +32,16 @@ export default function CustomCard({
   footerChildren,
 }: CustomCardProps) {
   return (
-    <Card className="relative overflow-hidden rounded-[5px]">
+    <Card className="relative gap-4 overflow-hidden rounded-[5px]">
       {isShowHeader && (
         <CardHeader>
           <CardTitle>{title}</CardTitle>
           <CardDescription className="pb-2.5">{description}</CardDescription>
         </CardHeader>
       )}
-      <CardContent className={`py-5 ${height}`}>{children}</CardContent>
+      <CardContent className={`px-2.5 py-2.5 ${height}`}>
+        {children}
+      </CardContent>
       {isShowFooter && (
         <CardFooter className="flex justify-center">
           {footerChildren}

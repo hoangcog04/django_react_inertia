@@ -19,7 +19,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const pageConfig: PageConfig = {
   heading: "Sửa nhóm thành viên",
-  breadcrumbs,
 }
 
 export default function UserCatalogueEdit() {
@@ -28,7 +27,7 @@ export default function UserCatalogueEdit() {
       <div className="page-wrapper flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl">
         <CustomPageHeading
           heading={pageConfig.heading}
-          breadcrumbs={pageConfig.breadcrumbs}
+          breadcrumbs={breadcrumbs}
         />
 
         <div className="page-container">

@@ -17,6 +17,6 @@ export function AppShell({ children, variant = "header" }: AppShellProps) {
     return <div className="flex min-h-screen w-full flex-col">{children}</div>
   }
 
-  // temp: always open the sidebar
-  return <SidebarProvider defaultOpen={true}>{children}</SidebarProvider>
+  // temp: always close the sidebar
+  return <SidebarProvider defaultOpen={false}>{children}</SidebarProvider>
 }

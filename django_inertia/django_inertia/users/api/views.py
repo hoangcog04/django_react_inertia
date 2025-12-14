@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema
 from rest_framework import serializers
 from rest_framework import status
 from rest_framework.decorators import action
@@ -8,7 +9,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
+from django_inertia.common.pagination import LimitOffsetPagination
+from django_inertia.common.pagination import get_paginated_response
 from django_inertia.common.utils import custom_slugify as slugify
+from django_inertia.users.api.selectors import user_list
 from django_inertia.users.api.services import user_catalogue_get
 from django_inertia.users.api.services import user_catalogue_save
 from django_inertia.users.models import User
@@ -23,8 +27,8 @@ class UserViewSet(RetrieveModelMixin, ListModelMixin, UpdateModelMixin, GenericV
     lookup_field = "username"
 
     def get_queryset(self, *args, **kwargs):
-        assert isinstance(self.request.user.id, int)
-        return self.queryset.filter(id=self.request.user.id)
+        assert isinstance(self.request.user.id, int)  # pyright: ignore[reportAttributeAccessIssue]
+        return self.queryset.filter(id=self.request.user.id)  # pyright: ignore[reportAttributeAccessIssue, reportOptionalMemberAccess]
 
     @action(detail=False)
     def me(self, request):
@@ -73,6 +77,9 @@ class UserCatalogueSaveApi(APIView):
 
 
 class UserCatalogueUpdateApi(APIView):
+    @extend_schema(
+        responses=OutputSerializer,
+    )
     def put(self, request, user_catalogue_id):
         serializer = InputSerializer(
             data=request.data,
@@ -90,7 +97,7 @@ class UserCatalogueUpdateApi(APIView):
 
 
 class UserCatalogueDetailApi(APIView):
-    class OutputSerializer(serializers.ModelSerializer):
+    class UserCatalogueDetailOutput(serializers.ModelSerializer):
         creator = serializers.SerializerMethodField()
 
         class Meta:
@@ -113,6 +120,11 @@ class UserCatalogueDetailApi(APIView):
                 return obj.creator.username
             return None
 
+    # https://drf-spectacular.readthedocs.io/en/latest/customization.html#step-2-extend-schema
+    # https://github.com/tfranzel/drf-spectacular/issues/90
+    @extend_schema(
+        responses=UserCatalogueDetailOutput,
+    )
     def get(self, request, user_catalogue_id):
         with_relation = ["creator"]
 
@@ -120,6 +132,28 @@ class UserCatalogueDetailApi(APIView):
             entity_id=user_catalogue_id,
             with_relation=with_relation,
         )
-        data = self.OutputSerializer(user_catalogue).data
+        data = self.UserCatalogueDetailOutput(user_catalogue).data
 
         return Response(data=data, status=status.HTTP_200_OK)
+
+
+class UserListApi(APIView):
+    class Pagination(LimitOffsetPagination):
+        default_limit = 20
+
+    class OutputSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = User
+            fields = ["id", "email", "name"]
+
+    def get(self, request):
+        filters = request.query_params
+        user_list_qs = user_list(filters=filters)
+
+        return get_paginated_response(
+            pagination_class=self.Pagination,
+            serializer_class=self.OutputSerializer,
+            queryset=user_list_qs,
+            request=request,
+            view=self,
+        )

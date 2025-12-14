@@ -30,6 +30,11 @@ class User(BaseModel, AbstractUser):
         return reverse("users:detail", kwargs={"username": self.username})
 
 
+class Publish(models.IntegerChoices):
+    PUBLISHED = 1, "1"
+    UNPUBLISHED = 2, "2"
+
+
 class UserCatalogue(BaseModel):
     """Category to classify users (e.g., Admin, Editor, Member...)"""
 
@@ -55,11 +60,18 @@ class UserCatalogue(BaseModel):
         related_name="catalogues",
         verbose_name=_("Users in this catalogue"),
     )
+    publish = models.IntegerField(choices=Publish.choices, default=Publish.UNPUBLISHED)
 
     class Meta:
         db_table = "user_catalogues"
         verbose_name = _("User Catalogue")
         verbose_name_plural = _("User Catalogues")
+        constraints = [
+            models.CheckConstraint(
+                name="%(app_label)s_%(class)s_publish_valid",
+                condition=models.Q(publish__in=Publish.values),
+            ),
+        ]
 
     def __str__(self):
         return f"{self.name}"
