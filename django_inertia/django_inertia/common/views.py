@@ -17,11 +17,6 @@ class TestAPI(APIView):
     class Pagination(LimitOffsetPagination):
         default_limit = 1000
 
-    class FilterSerializer(serializers.Serializer):
-        publish = serializers.IntegerField(required=False)
-        id = serializers.IntegerField(required=False)
-        search = serializers.CharField(required=False)
-
     def get(self, request):
         # filters_serializer = self.FilterSerializer(data=request.query_params)
         # filters_serializer.is_valid(raise_exception=True)

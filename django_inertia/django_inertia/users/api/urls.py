@@ -2,6 +2,7 @@ from django.urls import include
 from django.urls import path
 
 from django_inertia.users.api.views import UserCatalogueDetailApi
+from django_inertia.users.api.views import UserCatalogueListApi
 from django_inertia.users.api.views import UserCatalogueSaveApi
 from django_inertia.users.api.views import UserCatalogueUpdateApi
 from django_inertia.users.api.views import UserListApi
@@ -16,6 +17,7 @@ urlpatterns = [
                 path("save/", UserCatalogueSaveApi.as_view()),
                 path("<int:user_catalogue_id>/save/", UserCatalogueUpdateApi.as_view()),
                 path("<int:user_catalogue_id>/get/", UserCatalogueDetailApi.as_view()),
+                path("", UserCatalogueListApi.as_view()),
             ],
         ),
     ),

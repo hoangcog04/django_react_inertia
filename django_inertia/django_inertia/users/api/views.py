@@ -11,7 +11,9 @@ from rest_framework.viewsets import GenericViewSet
 
 from django_inertia.common.pagination import LimitOffsetPagination
 from django_inertia.common.pagination import get_paginated_response
+from django_inertia.common.services import model_list
 from django_inertia.common.utils import custom_slugify as slugify
+from django_inertia.users.api.filters import UserCatalogueFilter
 from django_inertia.users.api.selectors import user_list
 from django_inertia.users.api.services import user_catalogue_get
 from django_inertia.users.api.services import user_catalogue_save
@@ -40,6 +42,21 @@ class OutputSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserCatalogue
         fields = ["id", "name", "canonical", "description"]
+
+
+class UserPublicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        exclude = (
+            "password",
+            "last_login",
+            "is_superuser",
+            "is_staff",
+            "is_active",
+            "date_joined",
+            "user_permissions",
+            "groups",
+        )
 
 
 class InputSerializer(serializers.ModelSerializer):
@@ -154,6 +171,42 @@ class UserListApi(APIView):
             pagination_class=self.Pagination,
             serializer_class=self.OutputSerializer,
             queryset=user_list_qs,
+            request=request,
+            view=self,
+        )
+
+
+class UserCatalogueListApi(APIView):
+    class Pagination(LimitOffsetPagination):
+        pass
+
+    class OutputSerializer(serializers.ModelSerializer):
+        creator = UserPublicSerializer(read_only=True)
+
+        class Meta:
+            model = UserCatalogue
+            fields = [
+                "id",
+                "name",
+                "description",
+                "publish",
+                "creator",
+            ]
+
+    def get(self, request):
+        with_relation = ["creator"]
+
+        filters = request.query_params
+        qs = model_list(
+            model_or_queryset=UserCatalogue,
+            with_relation=with_relation,
+        )
+        qs = UserCatalogueFilter(filters, qs).qs
+
+        return get_paginated_response(
+            pagination_class=self.Pagination,
+            serializer_class=self.OutputSerializer,
+            queryset=qs,
             request=request,
             view=self,
         )

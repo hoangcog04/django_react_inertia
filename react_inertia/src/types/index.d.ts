@@ -2,6 +2,8 @@ import { InertiaLinkProps } from "@inertiajs/react"
 import { LucideIcon } from "lucide-react"
 import { z } from "zod"
 
+import { IColumn } from "@/components/custom-table"
+
 export interface Auth {
   user: User
 }
@@ -66,6 +68,7 @@ export interface PageConfig {
   cardHeading?: string
   cardDescription?: string
   filters?: IFilter[]
+  columns?: IColumn[]
 }
 export interface FormPageConfig<TFormValues> {
   // schema: z.ZodSchema<TFormValues>

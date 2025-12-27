@@ -4,7 +4,7 @@ import { toast } from "react-toastify"
 
 import { ErrorResponse } from "@/types/common"
 
-const FLASH_FROM_SERVER_TITLE = "Thông báo từ hệ thống"
+const FLASH_FROM_SERVER_TITLE = "Thông báo từ server"
 
 const httpRequest = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,

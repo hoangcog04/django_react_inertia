@@ -7,7 +7,7 @@ import Image from "@/components/image"
 export default function Welcome() {
   // temp: always show the login button
   // const isLogin = auth.user
-  const isLogin = true
+  const isLogin = false
   // temp: always show the register button
   const canRegister = true
 

@@ -1,14 +1,14 @@
 import { useMemo } from "react"
 import { chooseAll, keywordFilter } from "@/constants/filter"
-import { PageConfig, User } from "@/types"
+import { IFilter, PageConfig, User } from "@/types"
 
 type UseFilterProps = {
-  pageConfig: PageConfig
+  pageFilters?: IFilter[]
   users?: User[]
   statusFilters?: Map<string, boolean>
 }
 export const useFilter = ({
-  pageConfig,
+  pageFilters,
   users,
   statusFilters,
 }: UseFilterProps) => {
@@ -20,16 +20,16 @@ export const useFilter = ({
       })) ?? []
 
     return [
-      ...(pageConfig.filters ?? []),
+      ...(pageFilters ?? []),
       {
-        key: "user_id",
+        key: "creator_id",
         placeholder: "Chọn người tạo",
         defaultValue: "0",
         options: [chooseAll("Tất cả người tạo"), ...userOptions],
-        isLoading: statusFilters?.get("user_id") ?? false,
+        isLoading: statusFilters?.get("creator_id") ?? false,
         type: "select" as const,
       },
       keywordFilter,
     ]
-  }, [users, pageConfig, statusFilters])
+  }, [users, pageFilters, statusFilters])
 }

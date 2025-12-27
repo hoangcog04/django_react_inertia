@@ -40,13 +40,27 @@ def model_get(
     entity_id: int,
     with_relation: list[str] | None = None,
 ) -> models.Model:
+    # select_related('foo', 'bar')
     with_relation = with_relation or []
 
-    # select_related('foo', 'bar')
-    instance = model_or_queryset.objects.select_related(*with_relation).get(
-        id=entity_id,
-    )
-
-    if instance is None:
-        raise http.Http404
+    try:
+        # eager evaluation
+        instance = model_or_queryset.objects.select_related(*with_relation).get(
+            id=entity_id,
+        )
+    # https://docs.djangoproject.com/en/5.2/ref/models/querysets/#get
+    except model_or_queryset.DoesNotExist as err:
+        raise http.Http404 from err
     return instance
+
+
+def model_list(
+    *,
+    model_or_queryset,
+    with_relation: list[str] | None = None,
+) -> models.QuerySet:
+    # select_related('foo', 'bar')
+    with_relation = with_relation or []
+
+    # queryset lazy
+    return model_or_queryset.objects.select_related(*with_relation).all()

@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useEffect, useMemo, useState } from "react"
-import { useSearchParams } from "next/navigation"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
+import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation"
 import { ROUTES } from "@/constants"
 import { IFilter } from "@/types"
 import { Loader2, Search } from "lucide-react"
@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Spinner } from "@/components/ui/spinner"
 
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
@@ -24,11 +25,11 @@ interface FilterFormValues {
   [key: string]: string
 }
 
-type FilterUnitProps = {
+type FilterComponentProps = {
   filter: IFilter
   control: Control<FilterFormValues>
 }
-const FilterUnit = ({ filter, control }: FilterUnitProps) => {
+const FilterComponent = ({ filter, control }: FilterComponentProps) => {
   if (filter.type === "input") {
     return (
       <Controller
@@ -53,14 +54,14 @@ const FilterUnit = ({ filter, control }: FilterUnitProps) => {
       render={({ field }) =>
         filter.isLoading ? (
           <>
-            <Select defaultValue="0" disabled>
+            <Select defaultValue="loading" disabled>
               <SelectTrigger
                 className={`mr-2.5 w-[180px] cursor-pointer rounded-[5px] ${filter.className}`}
               >
                 <SelectValue placeholder={filter.placeholder} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="0">
+                <SelectItem value="loading">
                   <Loader2 className="size-4 animate-spin" />
                 </SelectItem>
               </SelectContent>
@@ -68,11 +69,7 @@ const FilterUnit = ({ filter, control }: FilterUnitProps) => {
           </>
         ) : (
           <>
-            <Select
-              defaultValue={filter.defaultValue}
-              value={field.value}
-              onValueChange={field.onChange}
-            >
+            <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger
                 className={`mr-2.5 w-[180px] cursor-pointer rounded-[5px] ${filter.className}`}
               >
@@ -95,84 +92,66 @@ const FilterUnit = ({ filter, control }: FilterUnitProps) => {
 
 type CustomFilterProps = {
   filters?: IFilter[]
+  searchParams: ReadonlyURLSearchParams
+  isLoading: boolean
 }
-export default function CustomFilter({ filters = [] }: CustomFilterProps) {
-  const [isSearching, setIsSearching] = useState(false)
-
+export default function CustomFilter({
+  filters = [],
+  searchParams,
+  isLoading,
+}: CustomFilterProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
+
+  const getDefaultValues = () => {
+    const values = {} as FilterFormValues
+    filters.forEach((f) => {
+      values[f.key] = searchParams.get(f.key) || f.defaultValue || ""
+    })
+    return values
+  }
+
   const { control, setValue, handleSubmit } = useForm<FilterFormValues>({
-    defaultValues: {
-      ...Object.fromEntries(filters.map((f) => [f.key, f.defaultValue])),
-    },
+    defaultValues: getDefaultValues(),
   })
 
   useEffect(() => {
-    const searchParamsMap = Object.fromEntries(searchParams.entries())
     filters.forEach((f) => {
-      const value = searchParamsMap[f.key] || f.defaultValue || ""
-      setValue(f.key, value)
+      setValue(f.key, searchParams.get(f.key) || f.defaultValue || "")
     })
   }, [filters, searchParams, setValue])
 
   const onSubmit = async (data: FilterFormValues) => {
-    setIsSearching(true)
+    const params = new URLSearchParams()
 
-    try {
-      const params = new URLSearchParams()
-
-      filters.forEach((filter) => {
-        const value = data[filter.key]
-        if (value && value !== "0") {
-          params.append(filter.key, value)
-        }
-      })
-
-      if (data.keyword?.trim()) {
-        params.append("keyword", data.keyword.trim())
+    filters.forEach((filter) => {
+      const value = data[filter.key]
+      if (value && value !== "0") {
+        params.append(filter.key, value)
       }
+    })
 
-      const queryString = params.toString()
-      const newUrl = queryString ? `?${queryString}` : ""
-      router.push(`${ROUTES.user_catalogue}${newUrl}`, { scroll: false })
-
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      const mockApiResponse = {
-        success: true,
-        data: {
-          filters: Object.fromEntries(params),
-          results: [
-            { id: 1, name: "Result 1" },
-            { id: 2, name: "Result 2" },
-            { id: 3, name: "Result 3" },
-          ],
-        },
-      }
-      console.log("✅ API Response:", mockApiResponse)
-    } catch (error) {
-      console.error("❌ Search error:", error)
-    } finally {
-      setIsSearching(false)
+    if (data.keyword?.trim()) {
+      params.append("keyword", data.keyword.trim())
     }
+
+    const queryString = params.toString()
+    const newUrl = queryString ? `?${queryString}` : ""
+    router.push(`${ROUTES.user_catalogue}${newUrl}`, { scroll: false })
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="flex">
         {filters.map((filter) => (
-          <FilterUnit key={filter.key} filter={filter} control={control} />
+          <FilterComponent key={filter.key} filter={filter} control={control} />
         ))}
 
         <Button
           type="submit"
           className="flex items-center rounded-[5px] font-light hover:bg-[#0088ff]/80"
-          disabled={isSearching}
+          disabled={isLoading}
         >
-          {isSearching ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <Search />
-          )}
+          {isLoading ? <Spinner className="size-4 animate-spin" /> : <Search />}
           <span className="">Tìm kiếm</span>
         </Button>
       </div>
