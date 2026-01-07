@@ -21,13 +21,23 @@ export interface IUserCatalogueList {
   description: string
   publish: number
   creator: User
+  created_at: string
+  updated_at: string
 }
 
 export interface ILogin {
   username: string
   password: string
 }
+export interface ILogout {
+  refresh: string
+}
 
 export interface ILoginResponse {
-  token: string
+  access: string
+  refresh: string
+}
+export interface IRefreshResp {
+  access: string
+  refresh: string
 }

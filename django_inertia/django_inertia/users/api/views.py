@@ -1,3 +1,5 @@
+from time import sleep
+
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers
 from rest_framework import status
@@ -9,12 +11,15 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
+from django_inertia.common.constant import EmailNotification
 from django_inertia.common.pagination import LimitOffsetPagination
+from django_inertia.common.pagination import PageNumberPagination
 from django_inertia.common.pagination import get_paginated_response
 from django_inertia.common.services import model_list
 from django_inertia.common.utils import custom_slugify as slugify
 from django_inertia.users.api.filters import UserCatalogueFilter
 from django_inertia.users.api.selectors import user_list
+from django_inertia.users.api.services import user_catalogue_delete
 from django_inertia.users.api.services import user_catalogue_get
 from django_inertia.users.api.services import user_catalogue_save
 from django_inertia.users.models import User
@@ -177,7 +182,7 @@ class UserListApi(APIView):
 
 
 class UserCatalogueListApi(APIView):
-    class Pagination(LimitOffsetPagination):
+    class Pagination(PageNumberPagination):
         pass
 
     class OutputSerializer(serializers.ModelSerializer):
@@ -191,6 +196,8 @@ class UserCatalogueListApi(APIView):
                 "description",
                 "publish",
                 "creator",
+                "created_at",
+                "updated_at",
             ]
 
     def get(self, request):
@@ -202,6 +209,7 @@ class UserCatalogueListApi(APIView):
             with_relation=with_relation,
         )
         qs = UserCatalogueFilter(filters, qs).qs
+        sleep(1)
 
         return get_paginated_response(
             pagination_class=self.Pagination,
@@ -209,4 +217,14 @@ class UserCatalogueListApi(APIView):
             queryset=qs,
             request=request,
             view=self,
+        )
+
+
+class UserCatalogueDeleteApi(APIView):
+    def delete(self, request, user_catalogue_id):
+        deleted = user_catalogue_delete(entity_id=user_catalogue_id)
+
+        return Response(
+            data={"deleted": deleted, "info": EmailNotification.SENT},
+            status=status.HTTP_200_OK,
         )

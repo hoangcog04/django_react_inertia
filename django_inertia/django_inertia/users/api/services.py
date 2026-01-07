@@ -1,6 +1,7 @@
 from django.db import transaction
 
 from django_inertia.common.services import model_get
+from django_inertia.common.services import model_soft_delete
 from django_inertia.common.services import model_update
 from django_inertia.users.models import UserCatalogue
 
@@ -56,3 +57,21 @@ def user_catalogue_get(*, entity_id, with_relation: list[str] | None = None):
         entity_id=entity_id,
         with_relation=with_relation,
     )
+
+
+@transaction.atomic
+def user_catalogue_delete(
+    *,
+    entity_id,
+) -> bool:
+    # prepare model data
+    # before save hook
+    _before_save(_=None)
+
+    instance = model_get(model_or_queryset=UserCatalogue, entity_id=entity_id)
+    deleted = model_soft_delete(instance=instance)
+
+    # after save hook
+    _after_save(_=None)
+
+    return deleted

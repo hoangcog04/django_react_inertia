@@ -2,7 +2,7 @@
 
 import { ROUTES } from "@/constants"
 import AuthLayout from "@/layouts/auth-layout"
-import { useAuth } from "@/services/useAuth"
+import { useLogin } from "@/services/useAuth"
 import { FormPageConfig } from "@/types"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next13-progressbar"
@@ -45,18 +45,20 @@ export default function Login() {
   const status = ""
 
   const router = useRouter()
-  const { useLogin } = useAuth()
-  const { mutateAsync: login, isPending } = useLogin()
+  const { mutate: login, isPending } = useLogin()
 
   const form = useForm<TLogin>({
     resolver: zodResolver(loginSchema),
     defaultValues: formPageConfig.defaultValues,
   })
 
-  const handleSubmit = form.handleSubmit(async (data) => {
-    await login(data)
-    toast.success("Login successful")
-    router.push(ROUTES.dashboard)
+  const handleSubmit = form.handleSubmit((data) => {
+    login(data, {
+      onSuccess: () => {
+        toast.success("Login successful")
+        router.push(ROUTES.dashboard)
+      },
+    })
   })
 
   return (

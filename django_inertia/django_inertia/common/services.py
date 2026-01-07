@@ -3,6 +3,7 @@ from typing import TypeVar
 
 from django import http
 from django.db import models
+from django.utils import timezone
 
 DjangoModelType = TypeVar("DjangoModelType", bound=models.Model)
 
@@ -64,3 +65,16 @@ def model_list(
 
     # queryset lazy
     return model_or_queryset.objects.select_related(*with_relation).all()
+
+
+def model_soft_delete(*, instance: models.Model) -> bool:
+    assert hasattr(instance, "deleted_at"), (
+        f"Model {instance.__class__.__name__} does not have 'deleted_at' field."
+    )
+
+    if instance.deleted_at is None:  # pyright: ignore[reportAttributeAccessIssue]
+        instance.deleted_at = timezone.now()  # pyright: ignore[reportAttributeAccessIssue]
+        instance.save(update_fields=["deleted_at"])
+        return True
+
+    return False

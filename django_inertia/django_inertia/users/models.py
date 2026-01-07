@@ -3,12 +3,13 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import CharField
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from django_inertia.common.models import BaseModel
 
 
-class User(BaseModel, AbstractUser):
+class User(AbstractUser):
     """
     Default custom user model for django_inertia.
     If adding fields that need to be filled at user signup,
@@ -19,6 +20,12 @@ class User(BaseModel, AbstractUser):
     name = CharField(_("Name of User"), blank=True, max_length=255)
     first_name = None  # type: ignore[assignment]
     last_name = None  # type: ignore[assignment]
+    created_at = models.DateTimeField(
+        _("Created at"),
+        db_index=True,
+        default=timezone.now,
+    )
+    updated_at = models.DateTimeField(_("Updated at"), auto_now=True)
 
     def get_absolute_url(self) -> str:
         """Get URL for user's detail view.
@@ -41,7 +48,6 @@ class UserCatalogue(BaseModel):
     name = models.CharField(_("Name"), max_length=255)
     canonical = models.CharField(_("Canonical"), max_length=255, unique=True)
     description = models.TextField(_("Description"), default="", blank=True)
-    deleted_at = models.DateTimeField(_("Deleted at"), null=True, blank=True)
     creator = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

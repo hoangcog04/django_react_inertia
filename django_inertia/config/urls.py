@@ -8,7 +8,12 @@ from django.views import defaults as default_views
 from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView
 from drf_spectacular.views import SpectacularSwaggerView
-from rest_framework.authtoken.views import obtain_auth_token
+
+# from rest_framework.authtoken.views import obtain_auth_token
+from rest_framework_simplejwt.views import TokenBlacklistView
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework_simplejwt.views import TokenVerifyView
 
 urlpatterns = [
     path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
@@ -38,7 +43,11 @@ urlpatterns += [
     # DRF auth token
     # {{base_url}}/api/auth-token/
     # Header Authorization: Token <token>
-    path("api/auth-token/", obtain_auth_token, name="obtain_auth_token"),
+    # path("api/auth-token/", obtain_auth_token, name="obtain_auth_token"),
+    path("api/token/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("api/token/logout/", TokenBlacklistView.as_view(), name="token_blacklist"),
+    path("api/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
     path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),
     path(
         "api/docs/",

@@ -149,16 +149,6 @@ export default function SaveForm({ isEdit = false }: SaveFormProps) {
       <div className="relative col-span-7">
         <Form {...form}>
           <form>
-            {/* {isGetUserCatalogueLoading && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 backdrop-blur-sm">
-                <div className="flex flex-col items-center gap-2">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <p className="text-sm text-muted-foreground">
-                    Đang tải dữ liệu...
-                  </p>
-                </div>
-              </div>
-            )} */}
             <fieldset disabled={isGetUserCatalogueLoading}>
               <CustomCard
                 title="Thông tin nhóm thành viên"

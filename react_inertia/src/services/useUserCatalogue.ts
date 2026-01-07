@@ -1,6 +1,11 @@
 // key, tanstack, service, api, type
-import { PaginationParams, PagingResponse, User } from "@/types"
-import { useMutation, useQuery } from "@tanstack/react-query"
+import {
+  LimitOffsetPagingResponse,
+  PageNumberPagingResponse,
+  PaginationParams,
+  User,
+} from "@/types"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import {
   IUserCatalogueGet,
@@ -19,13 +24,13 @@ const getUserCatalogue = (id: string): Promise<IUserCatalogueGet> => {
 
 const getUserList = (
   params?: PaginationParams
-): Promise<PagingResponse<User>> => {
+): Promise<LimitOffsetPagingResponse<User>> => {
   return httpRequest.get(`/users/`, { params })
 }
 
 const getUserCatalogueList = (
   params?: string
-): Promise<PagingResponse<IUserCatalogueList>> => {
+): Promise<PageNumberPagingResponse<IUserCatalogueList>> => {
   return httpRequest.get(`/user_catalogue/?${params}`)
 }
 
@@ -34,6 +39,10 @@ const updateUserCatalogue = (
   params: IUserCatalogueSave
 ): Promise<any> => {
   return httpRequest.put(`/user_catalogue/${id}/save/`, params)
+}
+
+const deleteUserCatalogue = (id: string): Promise<any> => {
+  return httpRequest.delete(`/user_catalogue/${id}/delete/`)
 }
 
 export const userCatalogueKeys = {
@@ -45,9 +54,13 @@ export const userCatalogueKeys = {
     [userCatalogueKeys.key, "user_list", params] as const,
   user_catalogue_list: (params?: string) =>
     [userCatalogueKeys.key, "user_catalogue_list", params] as const,
+  user_catalogue_delete: (id: string) =>
+    [userCatalogueKeys.key, "user_catalogue_delete", id] as const,
 }
 
 export const useUserCatalogue = () => {
+  const queryClient = useQueryClient()
+
   const useSaveUserCatalogue = () => {
     return useMutation({ mutationFn: saveUserCatalogue })
   }
@@ -81,11 +94,25 @@ export const useUserCatalogue = () => {
     })
   }
 
+  const useDeleteUserCatalogue = () => {
+    return useMutation({
+      mutationFn: (id: string) => deleteUserCatalogue(id),
+      onSuccess: () => {
+        // always invalidate the user_catalogue_list query
+        // no worry if we're still on the page or not
+        queryClient.invalidateQueries({
+          queryKey: [userCatalogueKeys.key, "user_catalogue_list"],
+        })
+      },
+    })
+  }
+
   return {
     useSaveUserCatalogue,
     useGetUserCatalogue,
     useUpdateUserCatalogue,
     useGetUserList,
     useGetUserCatalogueList,
+    useDeleteUserCatalogue,
   }
 }

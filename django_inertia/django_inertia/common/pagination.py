@@ -1,4 +1,5 @@
 from rest_framework.pagination import LimitOffsetPagination as _LimitOffsetPagination
+from rest_framework.pagination import PageNumberPagination as _PageNumberPagination
 from rest_framework.response import Response
 
 
@@ -46,6 +47,31 @@ class LimitOffsetPagination(_LimitOffsetPagination):
                 "count": self.count,
                 "next": self.get_next_link(),
                 "previous": self.get_previous_link(),
+                "results": data,
+            },
+        )
+
+
+class PageNumberPagination(_PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "perpage"
+    max_page_size = (
+        100  # This attribute is only valid if page_size_query_param is also set
+    )
+
+    def get_paginated_response(self, data):
+        assert self.page is not None
+
+        return Response(
+            {
+                "page_size": self.page.paginator.per_page,
+                "page": self.page.number,
+                "count": self.page.paginator.count,
+                "total_pages": self.page.paginator.num_pages,
+                "links": {
+                    "next": self.get_next_link(),
+                    "previous": self.get_previous_link(),
+                },
                 "results": data,
             },
         )

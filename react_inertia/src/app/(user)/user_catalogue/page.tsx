@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { ROUTES } from "@/constants"
@@ -8,6 +8,7 @@ import { filter } from "@/constants/filter"
 import AppLayout from "@/layouts/app-layout"
 import { useUserCatalogue } from "@/services/useUserCatalogue"
 import { PageConfig, type BreadcrumbItem } from "@/types"
+import { formatDateTime } from "@/utils/date"
 import { Edit, PlusCircle, Trash2 } from "lucide-react"
 
 import { IUserCatalogueList } from "@/types/schema"
@@ -17,8 +18,10 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { TableCell, TableRow } from "@/components/ui/table"
 import CustomCard from "@/components/custom-card"
+import CustomConfirmDelete from "@/components/custom-confirm-delete"
 import CustomFilter from "@/components/custom-filter"
 import CustomPageHeading from "@/components/custom-page-heading"
+import { CustomPagination } from "@/components/custom-pagination"
 import CustomTable from "@/components/custom-table"
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -32,8 +35,12 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
 ]
 
+type TableRowComponentProps = {
+  item: IUserCatalogueList
+  renderDeleteAction?: React.ReactNode
+}
 const TableRowComponent = React.memo(
-  ({ item }: { item: IUserCatalogueList }) => (
+  ({ item, renderDeleteAction }: TableRowComponentProps) => (
     <>
       <TableRow key={item.id}>
         <TableCell className="font-medium">
@@ -44,7 +51,14 @@ const TableRowComponent = React.memo(
         <TableCell>{item.description}</TableCell>
         <TableCell className="text-center">{item.creator?.name}</TableCell>
         <TableCell className="text-center">
-          <Switch checked={item.publish === 2} className="cursor-pointer" />
+          {formatDateTime(new Date(item.created_at))}
+        </TableCell>
+        <TableCell className="text-center">
+          {formatDateTime(new Date(item.updated_at))}
+        </TableCell>
+        <TableCell className="text-center">
+          {/* <Switch checked={item.publish === 2} className="cursor-pointer" /> */}
+          <Switch className="cursor-pointer" />
         </TableCell>
         <TableCell className="text-center">
           <div className="flex items-center justify-center space-x-1">
@@ -56,12 +70,7 @@ const TableRowComponent = React.memo(
                 <Edit />
               </Button>
             </Link>
-            <Button
-              type="button"
-              className="size-7 cursor-pointer rounded-[5px] bg-[#ed5565] p-0"
-            >
-              <Trash2 />
-            </Button>
+            {renderDeleteAction}
           </div>
         </TableCell>
       </TableRow>
@@ -69,6 +78,40 @@ const TableRowComponent = React.memo(
   )
 )
 TableRowComponent.displayName = "TableRowComponent"
+
+type DeleteActionComponentProps = {
+  item: IUserCatalogueList
+}
+const DeleteActionComponent = ({ item }: DeleteActionComponentProps) => {
+  const { useDeleteUserCatalogue } = useUserCatalogue()
+  const {
+    mutate: deleteUserCatalogue,
+    isPending: isDeleteUserCataloguePending,
+  } = useDeleteUserCatalogue()
+
+  const [open, setOpen] = useState(false)
+
+  const handleDelete = () => {
+    deleteUserCatalogue(item.id, {
+      onSuccess: () => {
+        setOpen(false)
+      },
+    })
+  }
+
+  return (
+    <CustomConfirmDelete
+      onConfirm={handleDelete}
+      isLoading={isDeleteUserCataloguePending}
+      open={open}
+      setOpen={setOpen}
+    />
+  )
+}
+
+const renderDeleteAction = (item: IUserCatalogueList) => (
+  <DeleteActionComponent item={item} />
+)
 
 const pageConfig: PageConfig = {
   heading: "Quản lý nhóm thành viên",
@@ -82,6 +125,8 @@ const pageConfig: PageConfig = {
     { key: "name", label: "Tên nhóm", className: "w-[25%]" },
     { key: "description", label: "Mô tả", className: "" },
     { key: "creator", label: "Người tạo", className: "text-center" },
+    { key: "created_at", label: "Ngày tạo", className: "text-center" },
+    { key: "updated_at", label: "Ngày sửa", className: "text-center" },
     { key: "publish", label: "Trạng thái", className: "text-center" },
     { key: "actions", label: "Thao tác", className: "w-[120px] text-center" },
   ],
@@ -89,10 +134,15 @@ const pageConfig: PageConfig = {
 
 export default function UserCatalogue() {
   const searchParams = useSearchParams()
+
   const { useGetUserList, useGetUserCatalogueList } = useUserCatalogue()
   const { data: userListData, isPending: isUserListPending } = useGetUserList()
-  const { data: userCatalogueListData, isPending: isUserCatalogueListPending } =
-    useGetUserCatalogueList(searchParams.toString())
+  const {
+    data: userCatalogueListData,
+    isPending: isUserCatalogueListPending,
+    isFetching: isUserCatalogueListFetching,
+  } = useGetUserCatalogueList(`${searchParams.toString()}&ordering=id`)
+
   const users = userListData?.results
   const allFilters = useFilter({
     pageFilters: pageConfig.filters,
@@ -110,9 +160,15 @@ export default function UserCatalogue() {
 
         <div className="page-container">
           <CustomCard
-            isShowFooter
             title={pageConfig.cardHeading}
             description={pageConfig.cardDescription}
+            isShowFooter
+            footerChildren={
+              <CustomPagination
+                records={userCatalogueListData}
+                rootPath={ROUTES.user_catalogue}
+              />
+            }
           >
             <div className="mb-2.5 flex items-center justify-between">
               <CustomFilter
@@ -130,7 +186,17 @@ export default function UserCatalogue() {
             <CustomTable
               columns={pageConfig.columns}
               data={userCatalogueListData?.results}
-              render={(item) => <TableRowComponent key={item.id} item={item} />}
+              render={(item) => (
+                <TableRowComponent
+                  key={item.id}
+                  item={item}
+                  renderDeleteAction={renderDeleteAction(item)}
+                />
+              )}
+              isLoading={isUserCatalogueListPending}
+              isRefreshing={
+                !isUserCatalogueListPending && isUserCatalogueListFetching
+              }
             />
           </CustomCard>
         </div>

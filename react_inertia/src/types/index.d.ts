@@ -43,12 +43,24 @@ export interface PaginationParams {
   limit?: number
   offset?: number
 }
-export interface PagingResponse<T> {
+export interface LimitOffsetPagingResponse<T> {
   limit: number
   offset: number
   count: number
   next: string
   previous: string
+  results: T[]
+}
+export interface ILink {
+  next?: string
+  previous?: string
+}
+export interface PageNumberPagingResponse<T> {
+  page_size: number
+  page: number
+  count: number
+  total_pages: number
+  links: ILink
   results: T[]
 }
 
