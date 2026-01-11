@@ -49,6 +49,25 @@ class OutputSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "canonical", "description"]
 
 
+class InputSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserCatalogue
+        fields = ["name", "canonical", "description", "publish"]
+        # disable unique validator to use custom one
+        # because slugify is only applied in validate_canonical
+        extra_kwargs: dict = {"canonical": {"validators": []}}
+
+    def validate_canonical(self, value):
+        slugged_value = slugify(value)
+        queryset = UserCatalogue.objects.filter(canonical=slugged_value)
+        updating_pk = self.context.get("updating_pk")
+        if updating_pk:
+            queryset = queryset.exclude(id=updating_pk)
+        if queryset.exists():
+            raise serializers.ValidationError("Canonical must be unique")
+        return slugged_value
+
+
 class UserPublicSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -64,23 +83,26 @@ class UserPublicSerializer(serializers.ModelSerializer):
         )
 
 
-class InputSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserCatalogue
-        fields = ["name", "canonical", "description"]
-        # disable unique validator to use custom one
-        # because slugify is only applied in validate_canonical
-        extra_kwargs: dict = {"canonical": {"validators": []}}
+class UserListApi(APIView):
+    class Pagination(LimitOffsetPagination):
+        default_limit = 20
 
-    def validate_canonical(self, value):
-        slugged_value = slugify(value)
-        queryset = UserCatalogue.objects.filter(canonical=slugged_value)
-        updating_pk = self.context.get("updating_pk")
-        if updating_pk:
-            queryset = queryset.exclude(id=updating_pk)
-        if queryset.exists():
-            raise serializers.ValidationError("Canonical must be unique")
-        return slugged_value
+    class OutputSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = User
+            fields = ["id", "email", "name"]
+
+    def get(self, request):
+        filters = request.query_params
+        user_list_qs = user_list(filters=filters)
+
+        return get_paginated_response(
+            pagination_class=self.Pagination,
+            serializer_class=self.OutputSerializer,
+            queryset=user_list_qs,
+            request=request,
+            view=self,
+        )
 
 
 class UserCatalogueSaveApi(APIView):
@@ -106,6 +128,7 @@ class UserCatalogueUpdateApi(APIView):
         serializer = InputSerializer(
             data=request.data,
             context={"updating_pk": user_catalogue_id},
+            partial=True,  # PATCH-like behavior
         )
         serializer.is_valid(raise_exception=True)
         user_catalogue = user_catalogue_save(
@@ -157,28 +180,6 @@ class UserCatalogueDetailApi(APIView):
         data = self.UserCatalogueDetailOutput(user_catalogue).data
 
         return Response(data=data, status=status.HTTP_200_OK)
-
-
-class UserListApi(APIView):
-    class Pagination(LimitOffsetPagination):
-        default_limit = 20
-
-    class OutputSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = User
-            fields = ["id", "email", "name"]
-
-    def get(self, request):
-        filters = request.query_params
-        user_list_qs = user_list(filters=filters)
-
-        return get_paginated_response(
-            pagination_class=self.Pagination,
-            serializer_class=self.OutputSerializer,
-            queryset=user_list_qs,
-            request=request,
-            view=self,
-        )
 
 
 class UserCatalogueListApi(APIView):

@@ -38,10 +38,7 @@ def user_catalogue_save(
     res = None
     if entity_id is not None:
         user_catalogue = user_catalogue_get(entity_id=entity_id)
-        res, _ = model_update(
-            instance=user_catalogue,
-            data=data,
-        )
+        res, _ = model_update(instance=user_catalogue, data=data)
     else:
         res = UserCatalogue.objects.create(**data)
 

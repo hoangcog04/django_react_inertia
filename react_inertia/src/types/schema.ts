@@ -6,23 +6,23 @@ export interface IDateTime {
 }
 
 export interface IUserCatalogueSave {
-  name: string
-  canonical: string
-  description?: string | undefined
+  name?: string
+  canonical?: string
+  description?: string
+  publish?: number
 }
 
 export interface IUserCatalogueGet extends IUserCatalogueSave, IDateTime {
   id: string
 }
 
-export interface IUserCatalogueList {
+export interface IUserCatalogueList extends IDateTime {
   id: string
   name: string
+  canonical: string
   description: string
   publish: number
   creator: User
-  created_at: string
-  updated_at: string
 }
 
 export interface ILogin {

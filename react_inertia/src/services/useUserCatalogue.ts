@@ -73,13 +73,6 @@ export const useUserCatalogue = () => {
     })
   }
 
-  const useUpdateUserCatalogue = () => {
-    return useMutation({
-      mutationFn: (params: { id: string; data: IUserCatalogueSave }) =>
-        updateUserCatalogue(params.id, params.data),
-    })
-  }
-
   const useGetUserList = (params?: PaginationParams) => {
     return useQuery({
       queryKey: userCatalogueKeys.user_list(params),
@@ -110,9 +103,15 @@ export const useUserCatalogue = () => {
   return {
     useSaveUserCatalogue,
     useGetUserCatalogue,
-    useUpdateUserCatalogue,
     useGetUserList,
     useGetUserCatalogueList,
     useDeleteUserCatalogue,
   }
+}
+
+export const useUpdateUserCatalogue = () => {
+  return useMutation({
+    mutationFn: (params: { id: string; data: IUserCatalogueSave }) =>
+      updateUserCatalogue(params.id, params.data),
+  })
 }

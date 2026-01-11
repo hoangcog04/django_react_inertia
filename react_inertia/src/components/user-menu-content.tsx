@@ -36,7 +36,6 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
   const handleLogout = () => {
     logout(undefined, {
       onSuccess: () => {
-        console.log("Logout successful")
         toast.success("Logout successful")
         cleanup()
         router.push(ROUTES.login)

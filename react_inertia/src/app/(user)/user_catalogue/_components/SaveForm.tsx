@@ -5,6 +5,7 @@ import { useParams } from "next/navigation"
 import { ROUTES, TOAST_TEXT } from "@/constants"
 import {
   userCatalogueKeys,
+  useUpdateUserCatalogue,
   useUserCatalogue,
 } from "@/services/useUserCatalogue"
 import { type FormPageConfig } from "@/types"
@@ -72,8 +73,7 @@ export default function SaveForm({ isEdit = false }: SaveFormProps) {
   )
 
   const queryClient = useQueryClient()
-  const { useSaveUserCatalogue, useGetUserCatalogue, useUpdateUserCatalogue } =
-    useUserCatalogue()
+  const { useSaveUserCatalogue, useGetUserCatalogue } = useUserCatalogue()
   const { mutate: saveUserCatalogue, isPending: isSaveUserCataloguePending } =
     useSaveUserCatalogue()
   const {

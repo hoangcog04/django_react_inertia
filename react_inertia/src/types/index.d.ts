@@ -1,4 +1,4 @@
-import { InertiaLinkProps } from "@inertiajs/react"
+// import { InertiaLinkProps } from "@inertiajs/react"
 import { LucideIcon } from "lucide-react"
 import { z } from "zod"
 
@@ -26,6 +26,7 @@ export interface NavItem {
   isActive?: boolean
   items?: SubNavItem[]
 }
+
 export interface SubNavItem {
   title: string
   url: string
@@ -43,6 +44,7 @@ export interface PaginationParams {
   limit?: number
   offset?: number
 }
+
 export interface LimitOffsetPagingResponse<T> {
   limit: number
   offset: number
@@ -51,10 +53,12 @@ export interface LimitOffsetPagingResponse<T> {
   previous: string
   results: T[]
 }
+
 export interface ILink {
   next?: string
   previous?: string
 }
+
 export interface PageNumberPagingResponse<T> {
   page_size: number
   page: number
@@ -74,14 +78,18 @@ export interface User {
   [key: string]: unknown
 }
 
-export interface PageConfig {
+type SwitchableFields = "publish" | "is_blocked" | "is_highlighted"
+
+export interface PageConfig<T> {
   heading: string
   breadcrumbs?: BreadcrumbItem[]
   cardHeading?: string
   cardDescription?: string
   filters?: IFilter[]
   columns?: IColumn[]
+  switches?: (keyof T & SwitchableFields)[]
 }
+
 export interface FormPageConfig<TFormValues> {
   // schema: z.ZodSchema<TFormValues>
   defaultValues: TFormValues
