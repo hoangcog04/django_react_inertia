@@ -3,12 +3,16 @@
 import { useCallback, useState } from "react"
 import { AnyFn, type PageConfig } from "@/types"
 
+import { useLatest } from "./use-latest"
+
+export type SingleSwitchState<F extends string> = {
+  values: Partial<Record<F, string>>
+  loading: boolean
+}
+
 export type SwitchState<F extends string> = Record<
   string | number,
-  {
-    values: Partial<Record<F, string>>
-    loading: boolean
-  }
+  SingleSwitchState<F>
 >
 
 type UseSwitchProps<T, M extends AnyFn> = {
@@ -22,10 +26,18 @@ const useSwitch = <T, M extends AnyFn>({
   type SwitchField = (typeof switchFields)[number]
 
   const [switches, setSwitches] = useState<SwitchState<SwitchField>>({})
+  const switchesRef = useLatest<SwitchState<SwitchField>>(switches)
+
+  const getSwitchState = useCallback(
+    (id: string): SingleSwitchState<SwitchField> => switchesRef.current[id],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  )
 
   const handleSwitchChange = useCallback(
     (id: string, field: SwitchField, currentValue: string | number) => {
       const newValue = currentValue === 2 ? 1 : 2
+
       setSwitches((prev) => ({
         ...prev,
         [id]: {
@@ -60,7 +72,10 @@ const useSwitch = <T, M extends AnyFn>({
     [mustBeMemoOnMutate]
   )
 
-  return { switches, handleSwitchChange }
+  return {
+    getSwitchState,
+    handleSwitchChange,
+  }
 }
 
 export default useSwitch

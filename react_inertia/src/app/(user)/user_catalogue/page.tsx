@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { ROUTES, TOAST_TEXT } from "@/constants"
@@ -21,7 +21,7 @@ import { toast } from "react-toastify"
 
 import { IUserCatalogueList, IUserCatalogueSave } from "@/types/schema"
 import { useFilter } from "@/hooks/use-filter"
-import { SwitchState } from "@/hooks/use-switch"
+import { SingleSwitchState } from "@/hooks/use-switch"
 import useTable from "@/hooks/use-table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -77,10 +77,10 @@ type UpdateUserCatalogueFn = UseMutateFunction<
 type TableRowComponentProps = {
   // handling API data
   item: IUserCatalogueList
-  switches: SwitchState<SwitchField>
   isSelected: boolean
+  switchState: SingleSwitchState<SwitchField>
   // handling UI actions
-  renderDeleteAction?: React.ReactNode
+  renderDeleteAction?: (item: IUserCatalogueList) => React.ReactNode
   mustBeMemoOnSwitchChange: (
     id: string,
     field: SwitchField,
@@ -91,16 +91,16 @@ type TableRowComponentProps = {
 const TableRowComponent = React.memo(
   ({
     item,
-    switches,
     isSelected,
+    switchState,
     renderDeleteAction,
     mustBeMemoOnSwitchChange,
     mustBeMemoOnSelectOne,
   }: TableRowComponentProps) => {
     // in first time, the hook doesn't contain the item.id state
     // use the data from the API
-    const effectiveSwitches = switches[item.id]?.values.publish ?? item.publish
-    const isLoading = switches[item.id]?.loading ?? false
+    const effectiveSwitches = switchState?.values.publish ?? item.publish
+    const isLoading = switchState?.loading ?? false
 
     return (
       <>
@@ -148,7 +148,7 @@ const TableRowComponent = React.memo(
                   <Edit />
                 </Button>
               </Link>
-              {renderDeleteAction}
+              {renderDeleteAction?.(item)}
             </div>
           </TableCell>
         </TableRow>
@@ -266,13 +266,13 @@ export default function UserCatalogue() {
   })
 
   const {
-    switches,
     selectedIds,
     isAllSelected,
     setSelectedIds,
     handleSwitchChange,
     handleSelectAll,
     handleSelectOne,
+    getSwitchState,
   } = useTable<IUserCatalogueList, UpdateUserCatalogueFn>({
     pageConfig,
     mustBeMemoMutateFnUsedBySwitch: updateUserCatalogue,
@@ -341,9 +341,9 @@ export default function UserCatalogue() {
                 <TableRowComponent
                   key={item.id}
                   item={item}
-                  switches={switches}
                   isSelected={selectedIds.includes(item.id)}
-                  renderDeleteAction={renderDeleteAction(item)}
+                  switchState={getSwitchState(item.id)}
+                  renderDeleteAction={renderDeleteAction}
                   mustBeMemoOnSwitchChange={handleSwitchChange}
                   mustBeMemoOnSelectOne={handleSelectOne}
                 />
