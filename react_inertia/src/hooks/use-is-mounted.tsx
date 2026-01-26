@@ -14,5 +14,6 @@ export function useIsMounted(): () => boolean {
   }, [])
 
   // return a func that returns the newest value of isMounted
+  // so you don't need to write isMounted.current
   return useCallback(() => isMounted.current, [])
 }

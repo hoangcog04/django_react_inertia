@@ -47,16 +47,12 @@ async function refreshAccessToken() {
 
 const httpRequest = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
-  headers: {
-    "content-type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
 })
 
 httpRequest.interceptors.request.use((config) => {
   const token = localStorage.getItem(LS_KEYS.ACCESS_TOKEN)
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
+  if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
 

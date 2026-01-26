@@ -7,7 +7,7 @@ import {
   userCatalogueKeys,
   useUpdateUserCatalogue,
   useUserCatalogue,
-} from "@/services/useUserCatalogue"
+} from "@/services/use-user-catalogue"
 import { type FormPageConfig } from "@/types"
 import { customSlugify } from "@/utils/helpers"
 import { zodResolver } from "@hookform/resolvers/zod"

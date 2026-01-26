@@ -1,6 +1,7 @@
 from django.urls import include
 from django.urls import path
 
+from django_inertia.users.api.views import UserCatalogueBulkApi
 from django_inertia.users.api.views import UserCatalogueDeleteApi
 from django_inertia.users.api.views import UserCatalogueDetailApi
 from django_inertia.users.api.views import UserCatalogueListApi
@@ -23,6 +24,7 @@ urlpatterns = [
                     UserCatalogueDeleteApi.as_view(),
                 ),
                 path("", UserCatalogueListApi.as_view()),
+                path("bulk_delete/", UserCatalogueBulkApi.as_view()),
             ],
         ),
     ),

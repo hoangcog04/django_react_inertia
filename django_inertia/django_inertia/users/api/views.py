@@ -19,6 +19,7 @@ from django_inertia.common.services import model_list
 from django_inertia.common.utils import custom_slugify as slugify
 from django_inertia.users.api.filters import UserCatalogueFilter
 from django_inertia.users.api.selectors import user_list
+from django_inertia.users.api.services import user_catalogue_bulk_delete
 from django_inertia.users.api.services import user_catalogue_delete
 from django_inertia.users.api.services import user_catalogue_get
 from django_inertia.users.api.services import user_catalogue_save
@@ -228,4 +229,42 @@ class UserCatalogueDeleteApi(APIView):
         return Response(
             data={"deleted": deleted, "info": EmailNotification.SENT},
             status=status.HTTP_200_OK,
+        )
+
+
+class UserCatalogueBulkApi(APIView):
+    class InputSerializer(serializers.Serializer):
+        ids = serializers.ListField(child=serializers.CharField(), allow_empty=False)
+
+        def validate_ids(self, value):
+            qs = UserCatalogue.objects.filter(id__in=value)
+            found_ids = set(map(str, qs.values_list("id", flat=True)))
+            missing = set(value) - found_ids
+            if missing:
+                msg = f"Invalid ids: {list(missing)}"
+                raise serializers.ValidationError(msg)
+
+            return value
+
+    def delete(self, request):
+        serializer = self.InputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        ids = serializer.validated_data["ids"]
+
+        deleted = user_catalogue_bulk_delete(entity_id_list=ids)
+        if deleted:
+            return Response(
+                data={
+                    "deleted": True,
+                    "warning": "You have just deleted multiple items.",
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            data={
+                "deleted": False,
+                "info": "Something went wrong during bulk delete.",
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )

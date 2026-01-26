@@ -1,5 +1,6 @@
 from django.db import transaction
 
+from django_inertia.common.services import model_bulk_delete
 from django_inertia.common.services import model_get
 from django_inertia.common.services import model_soft_delete
 from django_inertia.common.services import model_update
@@ -72,3 +73,20 @@ def user_catalogue_delete(
     _after_save(_=None)
 
     return deleted
+
+
+@transaction.atomic
+def user_catalogue_bulk_delete(
+    *,
+    entity_id_list: list[str],
+) -> bool:
+    # prepare model data
+    # before save hook
+    _before_save(_=None)
+
+    count = model_bulk_delete(model_or_queryset=UserCatalogue, ids=entity_id_list)
+
+    # after save hook
+    _after_save(_=None)
+
+    return count > 0

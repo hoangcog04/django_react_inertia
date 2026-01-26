@@ -1,9 +1,7 @@
 "use client"
 
 import { useCallback, useState } from "react"
-import { type PageConfig } from "@/types"
-
-type AnyFn = (...args: any[]) => any
+import { AnyFn, type PageConfig } from "@/types"
 
 export type SwitchState<F extends string> = Record<
   string | number,
@@ -14,11 +12,11 @@ export type SwitchState<F extends string> = Record<
 >
 
 type UseSwitchProps<T, M extends AnyFn> = {
-  mustBeMemoizedOnMutate: M
+  mustBeMemoOnMutate: M
   switchFields: NonNullable<PageConfig<T>["switches"]>
 }
 const useSwitch = <T, M extends AnyFn>({
-  mustBeMemoizedOnMutate,
+  mustBeMemoOnMutate,
   switchFields,
 }: UseSwitchProps<T, M>) => {
   type SwitchField = (typeof switchFields)[number]
@@ -35,7 +33,7 @@ const useSwitch = <T, M extends AnyFn>({
           loading: true,
         },
       }))
-      mustBeMemoizedOnMutate(
+      mustBeMemoOnMutate(
         { id, data: { [field]: newValue } },
         {
           onError: () => {
@@ -59,7 +57,7 @@ const useSwitch = <T, M extends AnyFn>({
         }
       )
     },
-    [mustBeMemoizedOnMutate]
+    [mustBeMemoOnMutate]
   )
 
   return { switches, handleSwitchChange }

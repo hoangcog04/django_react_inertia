@@ -3,25 +3,31 @@
 import React, { useEffect, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { ROUTES } from "@/constants"
+import { ROUTES, TOAST_TEXT } from "@/constants"
 import { filter } from "@/constants/filter"
 import AppLayout from "@/layouts/app-layout"
 import {
+  useBulkDeleteUserCatalogue,
+  userCatalogueKeys,
   useUpdateUserCatalogue,
   useUserCatalogue,
-} from "@/services/useUserCatalogue"
+} from "@/services/use-user-catalogue"
 import { PageConfig, type BreadcrumbItem } from "@/types"
 import { formatDateTime } from "@/utils/date"
-import { UseMutateFunction } from "@tanstack/react-query"
+import { sleep } from "@/utils/helpers"
+import { UseMutateFunction, useQueryClient } from "@tanstack/react-query"
 import { Edit, PlusCircle, Trash2 } from "lucide-react"
+import { toast } from "react-toastify"
 
 import { IUserCatalogueList, IUserCatalogueSave } from "@/types/schema"
 import { useFilter } from "@/hooks/use-filter"
-import useSwitch, { SwitchState } from "@/hooks/use-switch"
+import { SwitchState } from "@/hooks/use-switch"
+import useTable from "@/hooks/use-table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { TableCell, TableRow } from "@/components/ui/table"
+import CustomBulkAction from "@/components/custom-bulk-action"
 import CustomCard from "@/components/custom-card"
 import CustomConfirmDelete from "@/components/custom-confirm-delete"
 import CustomFilter from "@/components/custom-filter"
@@ -72,20 +78,24 @@ type TableRowComponentProps = {
   // handling API data
   item: IUserCatalogueList
   switches: SwitchState<SwitchField>
+  isSelected: boolean
   // handling UI actions
   renderDeleteAction?: React.ReactNode
-  onSwitchChange: (
+  mustBeMemoOnSwitchChange: (
     id: string,
     field: SwitchField,
     currentValue: string | number
   ) => void
+  mustBeMemoOnSelectOne: (id: string, checked: boolean) => void
 }
 const TableRowComponent = React.memo(
   ({
     item,
-    renderDeleteAction,
     switches,
-    onSwitchChange,
+    isSelected,
+    renderDeleteAction,
+    mustBeMemoOnSwitchChange,
+    mustBeMemoOnSelectOne,
   }: TableRowComponentProps) => {
     // in first time, the hook doesn't contain the item.id state
     // use the data from the API
@@ -94,9 +104,19 @@ const TableRowComponent = React.memo(
 
     return (
       <>
-        <TableRow key={item.id}>
+        <TableRow
+          key={item.id}
+          className={`cursor-pointer hover:bg-gray-200/20 ${isSelected ? "bg-[#ffc] hover:bg-[#ffc]" : ""}`}
+        >
           <TableCell className="font-medium">
-            <Input type="checkbox" className="size-4" />
+            <Input
+              type="checkbox"
+              className="size-4"
+              checked={isSelected}
+              onChange={(e) => {
+                mustBeMemoOnSelectOne(item.id, e.target.checked)
+              }}
+            />
           </TableCell>
           <TableCell>{item.id}</TableCell>
           <TableCell>{item.name}</TableCell>
@@ -112,7 +132,7 @@ const TableRowComponent = React.memo(
             <Switch
               checked={effectiveSwitches === 2}
               onCheckedChange={() => {
-                onSwitchChange(item.id, "publish", effectiveSwitches)
+                mustBeMemoOnSwitchChange(item.id, "publish", effectiveSwitches)
               }}
               disabled={isLoading}
               className="cursor-pointer"
@@ -171,6 +191,61 @@ const renderDeleteAction = (item: IUserCatalogueList) => (
   <DeleteActionComponent item={item} />
 )
 
+type BulkActionComponentProps = {
+  selectedIds: string[]
+  setSelectedIds: (ids: string[]) => void
+}
+const BulkActionComponent = ({
+  selectedIds,
+  setSelectedIds,
+}: BulkActionComponentProps) => {
+  const queryClient = useQueryClient()
+  const {
+    mutateAsync: bulkDeleteUserCatalogue,
+    isPending: isBulkDeleteUserCataloguePending,
+  } = useBulkDeleteUserCatalogue()
+
+  const handleBulkDelete = async (ids: string[]) => {
+    await bulkDeleteUserCatalogue(
+      { ids },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: userCatalogueKeys.user_catalogue_list(),
+          })
+        },
+      }
+    )
+  }
+
+  return (
+    <CustomBulkAction
+      selectedIds={selectedIds}
+      setSelectedIds={setSelectedIds}
+      actions={[
+        {
+          label: "Xóa nhiều bản ghi",
+          confirm: true,
+          confirmTitle: "Xác nhận xóa nhiều bản ghi",
+          confirmDescription:
+            "Lưu ý: Hành động này là không thể đảo ngược, hãy chắc chắn bạn muốn thực hiện hành động này",
+          run: (ids: string[]) => handleBulkDelete(ids),
+        },
+      ]}
+    />
+  )
+}
+
+const renderBulkAction = (
+  selectedIds: string[],
+  setSelectedIds: (ids: string[]) => void
+) => (
+  <BulkActionComponent
+    selectedIds={selectedIds}
+    setSelectedIds={setSelectedIds}
+  />
+)
+
 export default function UserCatalogue() {
   const searchParams = useSearchParams()
 
@@ -183,19 +258,25 @@ export default function UserCatalogue() {
     isFetching: isUserCatalogueListFetching,
   } = useGetUserCatalogueList(`${searchParams.toString()}&ordering=id`)
 
-  const { switches, handleSwitchChange } = useSwitch<
-    IUserCatalogueList,
-    UpdateUserCatalogueFn
-  >({
-    mustBeMemoizedOnMutate: updateUserCatalogue,
-    switchFields: pageConfig.switches!,
-  })
-
   const users = userListData?.results
   const allFilters = useFilter({
     pageFilters: pageConfig.filters,
     users,
     statusFilters: new Map([["creator_id", isUserListPending]]),
+  })
+
+  const {
+    switches,
+    selectedIds,
+    isAllSelected,
+    setSelectedIds,
+    handleSwitchChange,
+    handleSelectAll,
+    handleSelectOne,
+  } = useTable<IUserCatalogueList, UpdateUserCatalogueFn>({
+    pageConfig,
+    mustBeMemoMutateFnUsedBySwitch: updateUserCatalogue,
+    records: userCatalogueListData?.results ?? [],
   })
 
   return (
@@ -219,11 +300,15 @@ export default function UserCatalogue() {
             }
           >
             <div className="mb-2.5 flex items-center justify-between">
-              <CustomFilter
-                filters={allFilters}
-                searchParams={searchParams}
-                isLoading={isUserCatalogueListPending}
-              />
+              <div className="flex items-center gap-[10px]">
+                {selectedIds.length > 0 &&
+                  renderBulkAction(selectedIds, setSelectedIds)}
+                <CustomFilter
+                  filters={allFilters}
+                  searchParams={searchParams}
+                  isLoading={isUserCatalogueListPending}
+                />
+              </div>
               <Link href={ROUTES.user_catalogue_create}>
                 <Button className="rounded-[5px] bg-[#ed5565] shadow hover:bg-[#ed5565]/80">
                   <PlusCircle />
@@ -232,15 +317,35 @@ export default function UserCatalogue() {
               </Link>
             </div>
             <CustomTable
-              columns={pageConfig.columns}
+              columns={[
+                {
+                  key: "checkbox",
+                  label: (
+                    <Input
+                      type="checkbox"
+                      className="size-4 cursor-pointer bg-red-500"
+                      checked={isAllSelected}
+                      onChange={(e) => {
+                        handleSelectAll(e.target.checked)
+                      }}
+                    />
+                  ),
+                  className: "w-[60px]",
+                },
+                ...(pageConfig.columns ?? []).filter(
+                  (col) => col.key !== "checkbox"
+                ),
+              ]}
               data={userCatalogueListData?.results}
               render={(item) => (
                 <TableRowComponent
                   key={item.id}
                   item={item}
-                  renderDeleteAction={renderDeleteAction(item)}
                   switches={switches}
-                  onSwitchChange={handleSwitchChange}
+                  isSelected={selectedIds.includes(item.id)}
+                  renderDeleteAction={renderDeleteAction(item)}
+                  mustBeMemoOnSwitchChange={handleSwitchChange}
+                  mustBeMemoOnSelectOne={handleSelectOne}
                 />
               )}
               isLoading={isUserCatalogueListPending}

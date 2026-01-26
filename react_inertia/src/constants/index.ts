@@ -1,4 +1,4 @@
-export * from "./toastText"
+export * from "./toast-text"
 export * from "./route"
 
 export const LS_KEYS = {

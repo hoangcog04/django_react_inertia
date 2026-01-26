@@ -8,6 +8,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import {
+  IBulkDelete,
   IUserCatalogueGet,
   IUserCatalogueList,
   IUserCatalogueSave,
@@ -43,6 +44,10 @@ const updateUserCatalogue = (
 
 const deleteUserCatalogue = (id: string): Promise<any> => {
   return httpRequest.delete(`/user_catalogue/${id}/delete/`)
+}
+
+const bulkDeleteUserCatalogue = (params: IBulkDelete): Promise<any> => {
+  return httpRequest.delete("/user_catalogue/bulk_delete/", { data: params })
 }
 
 export const userCatalogueKeys = {
@@ -113,5 +118,18 @@ export const useUpdateUserCatalogue = () => {
   return useMutation({
     mutationFn: (params: { id: string; data: IUserCatalogueSave }) =>
       updateUserCatalogue(params.id, params.data),
+  })
+}
+
+export const useBulkDeleteUserCatalogue = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (params: IBulkDelete) => bulkDeleteUserCatalogue(params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [userCatalogueKeys.key, "user_catalogue_list"],
+      })
+    },
   })
 }

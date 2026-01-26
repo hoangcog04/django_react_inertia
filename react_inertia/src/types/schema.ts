@@ -5,6 +5,10 @@ export interface IDateTime {
   updated_at: string
 }
 
+export interface IBulkDelete {
+  ids: string[]
+}
+
 export interface IUserCatalogueSave {
   name?: string
   canonical?: string

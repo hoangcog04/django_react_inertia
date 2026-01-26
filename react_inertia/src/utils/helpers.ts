@@ -11,3 +11,7 @@ export function resolveUrl(url: string): string {
 export function customSlugify(value: string, locale: string = "vi"): string {
   return slugify(value, { locale })
 }
+
+export function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}

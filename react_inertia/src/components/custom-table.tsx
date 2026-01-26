@@ -15,7 +15,7 @@ import { Spinner } from "./ui/spinner"
 
 interface IColumn {
   key: string
-  label: string
+  label: string | React.ReactNode
   className?: string
 }
 
@@ -44,11 +44,12 @@ const CustomTable = <T,>({
         <TableRow>
           {columns?.map((column) => (
             <TableHead key={column.key} className={column.className}>
-              {column.key === "checkbox" ? (
+              {/* {column.key === "checkbox" ? (
                 <Input type="checkbox" className="size-4" />
               ) : (
                 column.label
-              )}
+              )} */}
+              {column.label}
             </TableHead>
           ))}
         </TableRow>

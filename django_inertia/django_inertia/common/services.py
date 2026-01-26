@@ -78,3 +78,18 @@ def model_soft_delete(*, instance: models.Model) -> bool:
         return True
 
     return False
+
+
+def model_bulk_delete(
+    *,
+    model_or_queryset,
+    ids: list[str],
+    force_delete: bool = False,
+) -> int:
+    qs = model_or_queryset.objects.filter(id__in=ids)
+
+    if force_delete:
+        deleted_count, _ = qs.delete()
+        return deleted_count
+
+    return qs.update(deleted_at=timezone.now())

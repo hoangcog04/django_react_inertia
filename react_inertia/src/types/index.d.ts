@@ -2,6 +2,7 @@
 import { LucideIcon } from "lucide-react"
 import { z } from "zod"
 
+import { IBulkAction } from "@/components/custom-bulk-action"
 import { IColumn } from "@/components/custom-table"
 
 export interface Auth {
@@ -88,6 +89,7 @@ export interface PageConfig<T> {
   filters?: IFilter[]
   columns?: IColumn[]
   switches?: (keyof T & SwitchableFields)[]
+  actions?: IBulkAction[]
 }
 
 export interface FormPageConfig<TFormValues> {
@@ -109,3 +111,5 @@ export interface IFilter {
   className?: string
   type: "select" | "input"
 }
+
+export type AnyFn = (...args: any[]) => any

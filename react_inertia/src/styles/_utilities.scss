@@ -4,18 +4,6 @@
   .text-balance {
     text-wrap: balance;
   }
-  .flex-center {
-    @apply flex items-center justify-center;
-  }
-  .flex-center-x {
-    @apply flex justify-center;
-  }
-  .flex-center-y {
-    @apply flex items-center;
-  }
-  .flex-between {
-    @apply flex items-center justify-between;
-  }
   .abs-center-y {
     @apply absolute top-1/2 -translate-y-1/2;
   }

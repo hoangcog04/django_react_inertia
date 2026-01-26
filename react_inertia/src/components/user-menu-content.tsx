@@ -6,7 +6,7 @@
 // import { Link, router } from "@inertiajs/react"
 import Link from "next/link"
 import { ROUTES } from "@/constants"
-import { useLogout } from "@/services/useAuth"
+import { useLogout } from "@/services/use-auth"
 import { type User } from "@/types"
 import { LogOut, Settings } from "lucide-react"
 import { useRouter } from "next13-progressbar"

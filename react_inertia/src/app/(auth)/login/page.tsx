@@ -2,7 +2,7 @@
 
 import { ROUTES } from "@/constants"
 import AuthLayout from "@/layouts/auth-layout"
-import { useLogin } from "@/services/useAuth"
+import { useLogin } from "@/services/use-auth"
 import { FormPageConfig } from "@/types"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next13-progressbar"
