@@ -1,7 +1,12 @@
+from typing import Any
+
 from django.db import transaction
 
+from django_inertia.common.decorator import log_queries
 from django_inertia.common.services import model_bulk_delete
+from django_inertia.common.services import model_bulk_update
 from django_inertia.common.services import model_get
+from django_inertia.common.services import model_list
 from django_inertia.common.services import model_soft_delete
 from django_inertia.common.services import model_update
 from django_inertia.users.models import UserCatalogue
@@ -13,6 +18,27 @@ def _before_save(*, _):
 
 def _after_save(*, _):
     pass
+
+
+def user_catalogue_get(*, entity_id, with_relation: list[str] | None = None):
+    return model_get(
+        model_or_queryset=UserCatalogue,
+        entity_id=entity_id,
+        with_relation=with_relation,
+    )
+
+
+def user_catalogue_list(
+    *,
+    ids: list[str] | None = None,
+    with_relation: list[str] | None = None,
+):
+    if ids is not None:
+        queryset = UserCatalogue.objects.filter(id__in=ids)
+    else:
+        queryset = UserCatalogue.objects.all()
+
+    return model_list(queryset=queryset, with_relation=with_relation)
 
 
 @transaction.atomic
@@ -49,14 +75,6 @@ def user_catalogue_save(
     return res
 
 
-def user_catalogue_get(*, entity_id, with_relation: list[str] | None = None):
-    return model_get(
-        model_or_queryset=UserCatalogue,
-        entity_id=entity_id,
-        with_relation=with_relation,
-    )
-
-
 @transaction.atomic
 def user_catalogue_delete(
     *,
@@ -66,7 +84,7 @@ def user_catalogue_delete(
     # before save hook
     _before_save(_=None)
 
-    instance = model_get(model_or_queryset=UserCatalogue, entity_id=entity_id)
+    instance = user_catalogue_get(entity_id=entity_id)
     deleted = model_soft_delete(instance=instance)
 
     # after save hook
@@ -90,3 +108,29 @@ def user_catalogue_bulk_delete(
     _after_save(_=None)
 
     return count > 0
+
+
+@log_queries
+@transaction.atomic
+def user_catalogue_bulk_update(
+    *,
+    entity_id_list: list[str],
+    data: dict[str, Any],
+    fields_to_update: list[str] | None = None,
+) -> int:
+    # prepare model data
+    # before save hook
+    _before_save(_=None)
+
+    instances = list(user_catalogue_list(ids=entity_id_list))
+    count, _ = model_bulk_update(
+        model=UserCatalogue,
+        instances=instances,
+        data=data,
+        fields=fields_to_update,
+    )
+
+    # after save hook
+    _after_save(_=None)
+
+    return count

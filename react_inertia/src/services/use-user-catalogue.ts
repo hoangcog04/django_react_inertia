@@ -8,10 +8,11 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import {
-  IBulkDelete,
   IUserCatalogueGet,
   IUserCatalogueList,
   IUserCatalogueSave,
+  UserCatalogueBulkDeleteReq,
+  UserCatalogueBulkUpdateReq,
 } from "@/types/schema"
 import httpRequest from "@/lib/axios"
 
@@ -46,8 +47,16 @@ const deleteUserCatalogue = (id: string): Promise<any> => {
   return httpRequest.delete(`/user_catalogue/${id}/delete/`)
 }
 
-const bulkDeleteUserCatalogue = (params: IBulkDelete): Promise<any> => {
-  return httpRequest.delete("/user_catalogue/bulk_delete/", { data: params })
+const bulkDeleteUserCatalogue = (
+  params: UserCatalogueBulkDeleteReq
+): Promise<any> => {
+  return httpRequest.delete("/user_catalogue/bulk/", { data: params })
+}
+
+const bulkUpdateUserCatalogue = (
+  params: UserCatalogueBulkUpdateReq
+): Promise<any> => {
+  return httpRequest.put("/user_catalogue/bulk/", params)
 }
 
 export const userCatalogueKeys = {
@@ -57,8 +66,11 @@ export const userCatalogueKeys = {
   get: (id: string) => [userCatalogueKeys.key, "get", id] as const,
   user_list: (params?: PaginationParams) =>
     [userCatalogueKeys.key, "user_list", params] as const,
-  user_catalogue_list: (params?: string) =>
-    [userCatalogueKeys.key, "user_catalogue_list", params] as const,
+  user_catalogue_list: (params?: string) => {
+    if (params)
+      return [userCatalogueKeys.key, "user_catalogue_list", params] as const
+    return [userCatalogueKeys.key, "user_catalogue_list"] as const
+  },
   user_catalogue_delete: (id: string) =>
     [userCatalogueKeys.key, "user_catalogue_delete", id] as const,
 }
@@ -99,7 +111,7 @@ export const useUserCatalogue = () => {
         // always invalidate the user_catalogue_list query
         // no worry if we're still on the page or not
         queryClient.invalidateQueries({
-          queryKey: [userCatalogueKeys.key, "user_catalogue_list"],
+          queryKey: userCatalogueKeys.user_catalogue_list(),
         })
       },
     })
@@ -125,10 +137,24 @@ export const useBulkDeleteUserCatalogue = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (params: IBulkDelete) => bulkDeleteUserCatalogue(params),
+    mutationFn: (params: UserCatalogueBulkDeleteReq) =>
+      bulkDeleteUserCatalogue(params),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [userCatalogueKeys.key, "user_catalogue_list"],
+        queryKey: userCatalogueKeys.user_catalogue_list(),
+      })
+    },
+  })
+}
+
+export const useBulkUpdateUserCatalogue = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: bulkUpdateUserCatalogue,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: userCatalogueKeys.user_catalogue_list(),
       })
     },
   })

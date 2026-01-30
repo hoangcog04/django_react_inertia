@@ -57,14 +57,14 @@ def model_get(
 
 def model_list(
     *,
-    model_or_queryset,
+    queryset,
     with_relation: list[str] | None = None,
 ) -> models.QuerySet:
     # select_related('foo', 'bar')
     with_relation = with_relation or []
 
     # queryset lazy
-    return model_or_queryset.objects.select_related(*with_relation).all()
+    return queryset.select_related(*with_relation).all()
 
 
 def model_soft_delete(*, instance: models.Model) -> bool:
@@ -93,3 +93,43 @@ def model_bulk_delete(
         return deleted_count
 
     return qs.update(deleted_at=timezone.now())
+
+
+def model_bulk_update[DjangoModelType: models.Model](
+    *,
+    model,
+    instances: list[DjangoModelType],
+    data: dict[str, Any],
+    fields: list[str] | None = None,
+    batch_size: int | None = None,
+) -> tuple[int, bool]:
+    if fields is None:
+        fields = list(data.keys())
+
+    should_update = False
+    update_fields = []
+    to_update = []
+
+    for instance in instances:
+        for field in fields:
+            if field not in data:
+                continue
+            if getattr(instance, field) != data[field]:
+                should_update = True
+                update_fields.append(field)
+                setattr(instance, field, data[field])
+        if should_update:
+            to_update.append(instance)
+        should_update = False
+
+    if not to_update:
+        return 0, False
+
+    count = model.objects.bulk_update(
+        to_update,
+        fields=update_fields,
+        batch_size=batch_size,
+    )
+    has_updated = count > 0
+
+    return count, has_updated

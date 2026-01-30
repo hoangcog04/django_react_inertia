@@ -5,7 +5,7 @@ export interface IDateTime {
   updated_at: string
 }
 
-export interface IBulkDelete {
+export interface UserCatalogueBulkDeleteReq {
   ids: string[]
 }
 
@@ -44,4 +44,10 @@ export interface ILoginResponse {
 export interface IRefreshResp {
   access: string
   refresh: string
+}
+
+export interface UserCatalogueBulkUpdateReq {
+  ids: string[]
+  publish?: 1 | 2
+  [key: string]: any
 }

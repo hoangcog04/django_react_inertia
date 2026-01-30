@@ -33,6 +33,7 @@ const useTable = <T extends { id: string }, M extends AnyFn>({
   const { getSwitchState, handleSwitchChange } = useSwitch<T, M>({
     mustBeMemoOnMutate: mustBeMemoMutateFnUsedBySwitch as M,
     switchFields: pageConfig.switches!,
+    records,
   })
   const [selectedIds, setSelectedIds] = useState<string[]>([])
 

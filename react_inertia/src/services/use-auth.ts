@@ -1,6 +1,6 @@
 import { LS_KEYS } from "@/constants"
 import storage from "@/utils/storage"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation } from "@tanstack/react-query"
 
 import { ILogin, ILoginResponse, IRefreshResp } from "@/types/schema"
 import httpRequest from "@/lib/axios"
@@ -23,7 +23,6 @@ const refresh = (): Promise<IRefreshResp> => {
 
 export const authKeys = {
   key: "auth" as const,
-  login: () => [authKeys.key, "login"] as const,
   logout: () => [authKeys.key, "logout"] as const,
 }
 
@@ -38,14 +37,11 @@ export const useLogin = () => {
 }
 
 export const useLogout = () => {
-  const queryClient = useQueryClient()
-
   return useMutation({
     mutationFn: () => logout(),
     onSuccess: () => {
       storage.remove(LS_KEYS.ACCESS_TOKEN)
       storage.remove(LS_KEYS.REFRESH_TOKEN)
-      queryClient.invalidateQueries({ queryKey: authKeys.login() })
     },
   })
 }

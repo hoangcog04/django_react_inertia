@@ -24,7 +24,7 @@ urlpatterns = [
                     UserCatalogueDeleteApi.as_view(),
                 ),
                 path("", UserCatalogueListApi.as_view()),
-                path("bulk_delete/", UserCatalogueBulkApi.as_view()),
+                path("bulk/", UserCatalogueBulkApi.as_view()),
             ],
         ),
     ),

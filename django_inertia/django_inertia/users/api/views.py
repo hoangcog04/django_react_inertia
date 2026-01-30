@@ -1,5 +1,3 @@
-from time import sleep
-
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers
 from rest_framework import status
@@ -15,13 +13,14 @@ from django_inertia.common.constant import EmailNotification
 from django_inertia.common.pagination import LimitOffsetPagination
 from django_inertia.common.pagination import PageNumberPagination
 from django_inertia.common.pagination import get_paginated_response
-from django_inertia.common.services import model_list
 from django_inertia.common.utils import custom_slugify as slugify
 from django_inertia.users.api.filters import UserCatalogueFilter
 from django_inertia.users.api.selectors import user_list
 from django_inertia.users.api.services import user_catalogue_bulk_delete
+from django_inertia.users.api.services import user_catalogue_bulk_update
 from django_inertia.users.api.services import user_catalogue_delete
 from django_inertia.users.api.services import user_catalogue_get
+from django_inertia.users.api.services import user_catalogue_list
 from django_inertia.users.api.services import user_catalogue_save
 from django_inertia.users.models import User
 from django_inertia.users.models import UserCatalogue
@@ -206,12 +205,8 @@ class UserCatalogueListApi(APIView):
         with_relation = ["creator"]
 
         filters = request.query_params
-        qs = model_list(
-            model_or_queryset=UserCatalogue,
-            with_relation=with_relation,
-        )
+        qs = user_catalogue_list(with_relation=with_relation)
         qs = UserCatalogueFilter(filters, qs).qs
-        sleep(1)
 
         return get_paginated_response(
             pagination_class=self.Pagination,
@@ -233,8 +228,30 @@ class UserCatalogueDeleteApi(APIView):
 
 
 class UserCatalogueBulkApi(APIView):
-    class InputSerializer(serializers.Serializer):
-        ids = serializers.ListField(child=serializers.CharField(), allow_empty=False)
+    class DeleteInputSerializer(serializers.Serializer):
+        ids = serializers.ListField(
+            child=serializers.CharField(),
+            required=True,
+            allow_empty=False,
+        )
+
+        def validate_ids(self, value):
+            qs = UserCatalogue.objects.filter(id__in=value)
+            found_ids = set(map(str, qs.values_list("id", flat=True)))
+            missing = set(value) - found_ids
+            if missing:
+                msg = f"Invalid ids: {list(missing)}"
+                raise serializers.ValidationError(msg)
+
+            return value
+
+    class PutInputSerializer(serializers.Serializer):
+        ids = serializers.ListField(
+            child=serializers.CharField(),
+            required=True,
+            allow_empty=False,
+        )
+        publish = serializers.ChoiceField(choices=[1, 2], required=False)
 
         def validate_ids(self, value):
             qs = UserCatalogue.objects.filter(id__in=value)
@@ -247,8 +264,9 @@ class UserCatalogueBulkApi(APIView):
             return value
 
     def delete(self, request):
-        serializer = self.InputSerializer(data=request.data)
+        serializer = self.DeleteInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
         ids = serializer.validated_data["ids"]
 
         deleted = user_catalogue_bulk_delete(entity_id_list=ids)
@@ -267,4 +285,23 @@ class UserCatalogueBulkApi(APIView):
                 "info": "Something went wrong during bulk delete.",
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    def put(self, request):
+        fields_to_update = ["publish"]
+
+        serializer = self.PutInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        ids = serializer.validated_data.pop("ids")
+
+        count = user_catalogue_bulk_update(
+            entity_id_list=ids,
+            data=serializer.validated_data,
+            fields_to_update=fields_to_update,
+        )
+
+        return Response(
+            data={"info": f"We have updated {count} items."},
+            status=status.HTTP_200_OK,
         )

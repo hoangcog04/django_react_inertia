@@ -8,6 +8,7 @@ import { filter } from "@/constants/filter"
 import AppLayout from "@/layouts/app-layout"
 import {
   useBulkDeleteUserCatalogue,
+  useBulkUpdateUserCatalogue,
   userCatalogueKeys,
   useUpdateUserCatalogue,
   useUserCatalogue,
@@ -19,7 +20,11 @@ import { UseMutateFunction, useQueryClient } from "@tanstack/react-query"
 import { Edit, PlusCircle, Trash2 } from "lucide-react"
 import { toast } from "react-toastify"
 
-import { IUserCatalogueList, IUserCatalogueSave } from "@/types/schema"
+import {
+  IUserCatalogueList,
+  IUserCatalogueSave,
+  UserCatalogueBulkUpdateReq,
+} from "@/types/schema"
 import { useFilter } from "@/hooks/use-filter"
 import { SingleSwitchState } from "@/hooks/use-switch"
 import useTable from "@/hooks/use-table"
@@ -84,7 +89,7 @@ type TableRowComponentProps = {
   mustBeMemoOnSwitchChange: (
     id: string,
     field: SwitchField,
-    currentValue: string | number
+    currentValue: string
   ) => void
   mustBeMemoOnSelectOne: (id: string, checked: boolean) => void
 }
@@ -130,9 +135,13 @@ const TableRowComponent = React.memo(
           </TableCell>
           <TableCell className="text-center">
             <Switch
-              checked={effectiveSwitches === 2}
+              checked={String(effectiveSwitches) === "2" ? true : false}
               onCheckedChange={() => {
-                mustBeMemoOnSwitchChange(item.id, "publish", effectiveSwitches)
+                mustBeMemoOnSwitchChange(
+                  item.id,
+                  "publish",
+                  String(effectiveSwitches) === "2" ? "2" : "1"
+                )
               }}
               disabled={isLoading}
               className="cursor-pointer"
@@ -199,23 +208,21 @@ const BulkActionComponent = ({
   selectedIds,
   setSelectedIds,
 }: BulkActionComponentProps) => {
-  const queryClient = useQueryClient()
   const {
     mutateAsync: bulkDeleteUserCatalogue,
     isPending: isBulkDeleteUserCataloguePending,
   } = useBulkDeleteUserCatalogue()
+  const {
+    mutateAsync: bulkUpdateUserCatalogue,
+    isPending: isBulkUpdateUserCataloguePending,
+  } = useBulkUpdateUserCatalogue()
 
   const handleBulkDelete = async (ids: string[]) => {
-    await bulkDeleteUserCatalogue(
-      { ids },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: userCatalogueKeys.user_catalogue_list(),
-          })
-        },
-      }
-    )
+    await bulkDeleteUserCatalogue({ ids })
+  }
+
+  const handleBulkUpdate = async (data: UserCatalogueBulkUpdateReq) => {
+    await bulkUpdateUserCatalogue(data)
   }
 
   return (
@@ -230,6 +237,14 @@ const BulkActionComponent = ({
           confirmDescription:
             "Lưu ý: Hành động này là không thể đảo ngược, hãy chắc chắn bạn muốn thực hiện hành động này",
           run: (ids: string[]) => handleBulkDelete(ids),
+        },
+        {
+          label: "Cập nhật trạng thái: Bật",
+          run: (ids: string[]) => handleBulkUpdate({ ids, publish: 2 }),
+        },
+        {
+          label: "Cập nhật trạng thái: Tắt",
+          run: (ids: string[]) => handleBulkUpdate({ ids, publish: 1 }),
         },
       ]}
     />

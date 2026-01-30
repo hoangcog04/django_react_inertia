@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { AnyFn, type PageConfig } from "@/types"
 
 import { useLatest } from "./use-latest"
@@ -15,18 +15,36 @@ export type SwitchState<F extends string> = Record<
   SingleSwitchState<F>
 >
 
-type UseSwitchProps<T, M extends AnyFn> = {
+type UseSwitchProps<T extends { id: string }, M extends AnyFn> = {
   mustBeMemoOnMutate: M
   switchFields: NonNullable<PageConfig<T>["switches"]>
+  records: T[]
 }
-const useSwitch = <T, M extends AnyFn>({
+const useSwitch = <T extends { id: string }, M extends AnyFn>({
   mustBeMemoOnMutate,
   switchFields,
+  records,
 }: UseSwitchProps<T, M>) => {
   type SwitchField = (typeof switchFields)[number]
 
   const [switches, setSwitches] = useState<SwitchState<SwitchField>>({})
   const switchesRef = useLatest<SwitchState<SwitchField>>(switches)
+
+  useEffect(() => {
+    if (records.length === 0) return
+
+    const initSwitches: SwitchState<SwitchField> = {}
+    records.forEach((record) => {
+      initSwitches[record.id] = {
+        values: switchFields.reduce(
+          (acc, field) => ({ ...acc, [field]: String(record[field]) }),
+          {} as Record<SwitchField, string>
+        ),
+        loading: false,
+      }
+    })
+    setSwitches(initSwitches)
+  }, [records, switchFields])
 
   const getSwitchState = useCallback(
     (id: string): SingleSwitchState<SwitchField> => switchesRef.current[id],
@@ -35,8 +53,8 @@ const useSwitch = <T, M extends AnyFn>({
   )
 
   const handleSwitchChange = useCallback(
-    (id: string, field: SwitchField, currentValue: string | number) => {
-      const newValue = currentValue === 2 ? 1 : 2
+    (id: string, field: SwitchField, currentValue: string) => {
+      const newValue = currentValue === "2" ? "1" : "2"
 
       setSwitches((prev) => ({
         ...prev,
