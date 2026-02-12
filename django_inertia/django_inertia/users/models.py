@@ -57,19 +57,9 @@ class UserCatalogue(BaseModel):
         db_column="user_id",
         verbose_name=_("Creator"),
     )
-    # pivot table: user_catalogue_user
-    users: models.ManyToManyField = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        # through specifies the custom intermediate table
-        through="UserCatalogueUser",
-        # fetch catalogues a user belongs to: my_user.catalogues.all()
-        related_name="catalogues",
-        verbose_name=_("Users in this catalogue"),
-    )
     publish = models.IntegerField(choices=Publish.choices, default=Publish.UNPUBLISHED)
 
     class Meta:
-        db_table = "user_catalogues"
         verbose_name = _("User Catalogue")
         verbose_name_plural = _("User Catalogues")
         constraints = [
@@ -83,24 +73,28 @@ class UserCatalogue(BaseModel):
         return f"{self.name}"
 
 
-class UserCatalogueUser(BaseModel):
-    """Pivot table: which User belongs to which Catalogue"""
-
-    user = models.ForeignKey(
+class Permission(BaseModel):
+    name = models.CharField(max_length=255)
+    canonical = models.CharField(_("Canonical"), max_length=255, unique=True)
+    description = models.TextField(default="", blank=True)
+    publish = models.IntegerField(choices=Publish.choices, default=Publish.UNPUBLISHED)
+    creator = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="created_permissions",
         db_column="user_id",
-    )
-    user_catalogue = models.ForeignKey(
-        UserCatalogue,
-        on_delete=models.CASCADE,
-        db_column="user_catalogue_id",
     )
 
     class Meta:
-        db_table = "user_catalogue_user"
-        verbose_name = _("User Catalogue Assignment")
-        verbose_name_plural = _("User Catalogue Assignments")
+        verbose_name = _("Permission")
+        verbose_name_plural = _("Permissions")
+        constraints = [
+            models.CheckConstraint(
+                name="%(app_label)s_%(class)s_publish_valid",
+                condition=models.Q(publish__in=Publish.values),
+            ),
+        ]
 
     def __str__(self):
-        return f"{self.user} - {self.user_catalogue}"
+        return f"{self.name}"

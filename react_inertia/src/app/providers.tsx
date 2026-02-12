@@ -1,10 +1,13 @@
 "use client"
 
 import { useState } from "react"
+import dynamic from "next/dynamic"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { Next13ProgressBar } from "next13-progressbar"
 
-import CustomToast from "@/components/custom-toast"
+const Next13ProgressBar = dynamic(
+  () => import("next13-progressbar").then((m) => m.Next13ProgressBar),
+  { ssr: false }
+)
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -20,7 +23,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <CustomToast />
       <Next13ProgressBar
         options={{ showSpinner: false }}
         showOnShallow

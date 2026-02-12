@@ -1,12 +1,8 @@
-"use client"
-
 // import { dashboard } from "@/routes"
 
 // import { Link } from "@inertiajs/react"
 import Link from "next/link"
 import { ROUTES } from "@/constants"
-import { type NavItem } from "@/types"
-import { BookOpen, Folder, LayoutGrid, Users } from "lucide-react"
 
 import {
   Sidebar,
@@ -22,42 +18,6 @@ import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
 
 import AppLogo from "./app-logo"
-
-const mainNavItems: NavItem[] = [
-  {
-    title: "Dashboard",
-    href: ROUTES.dashboard,
-    icon: LayoutGrid,
-  },
-  {
-    title: "Quản lý thành viên",
-    href: ROUTES.void,
-    icon: Users,
-    items: [
-      {
-        title: "Nhóm thành viên",
-        url: ROUTES.user_catalogue,
-      },
-      {
-        title: "Thành viên",
-        url: ROUTES.user,
-      },
-    ],
-  },
-]
-
-const footerNavItems: NavItem[] = [
-  {
-    title: "Repository",
-    href: "https://github.com/laravel/react-starter-kit",
-    icon: Folder,
-  },
-  {
-    title: "Documentation",
-    href: "https://laravel.com/docs/starter-kits#react",
-    icon: BookOpen,
-  },
-]
 
 export function AppSidebar() {
   return (
@@ -75,11 +35,11 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain items={mainNavItems} />
+        <NavMain />
       </SidebarContent>
 
       <SidebarFooter>
-        <NavFooter items={footerNavItems} className="mt-auto" />
+        <NavFooter className="mt-auto" />
         <NavUser />
       </SidebarFooter>
     </Sidebar>

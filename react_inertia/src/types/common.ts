@@ -6,3 +6,8 @@ export interface ErrorResponse {
   statusCode: HttpStatusCode
   extra: Record<string, any>
 }
+
+export interface IDateTime {
+  created_at: string
+  updated_at: string
+}

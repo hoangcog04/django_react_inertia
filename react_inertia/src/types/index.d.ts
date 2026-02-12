@@ -10,8 +10,10 @@ export interface Auth {
 }
 
 export interface BreadcrumbItem {
+  key: string
   title: string
   href: string
+  items?: SubBreadcrumbItem[]
 }
 
 export interface NavGroup {

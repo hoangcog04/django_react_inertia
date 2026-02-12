@@ -1,4 +1,5 @@
 export const ROUTES = {
+  void: "#",
   home: "/",
   dashboard: "/dashboard",
   login: "/login",
@@ -6,7 +7,9 @@ export const ROUTES = {
   forgot_password: "/forgot-password",
   user: "/user",
   user_catalogue: "/user_catalogue",
-  user_catalogue_create: "/user_catalogue/save",
-  user_catalogue_edit: "/user_catalogue/[id]/edit",
-  void: "#",
+  user_catalogue_save: "/user_catalogue/save",
+  user_catalogue_edit: (id: string) => `/user_catalogue/${id}/edit`,
+  permission: "/permission",
+  permission_save: "/permission/save",
+  permission_edit: (id: string) => `/permission/${id}/edit`,
 }

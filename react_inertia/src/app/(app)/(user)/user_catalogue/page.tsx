@@ -1,35 +1,30 @@
 "use client"
 
-import React, { useCallback, useEffect, useState } from "react"
+import React, { Suspense, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { ROUTES, TOAST_TEXT } from "@/constants"
+import { ROUTES } from "@/constants"
 import { filter } from "@/constants/filter"
-import AppLayout from "@/layouts/app-layout"
 import {
+  IUserCatalogueList,
+  IUserCatalogueSave,
   useBulkDeleteUserCatalogue,
   useBulkUpdateUserCatalogue,
-  userCatalogueKeys,
+  UserCatalogueBulkUpdateReq,
   useUpdateUserCatalogue,
   useUserCatalogue,
 } from "@/services/use-user-catalogue"
 import { PageConfig, type BreadcrumbItem } from "@/types"
 import { formatDateTime } from "@/utils/date"
-import { sleep } from "@/utils/helpers"
-import { UseMutateFunction, useQueryClient } from "@tanstack/react-query"
-import { Edit, PlusCircle, Trash2 } from "lucide-react"
-import { toast } from "react-toastify"
+import { UseMutateFunction } from "@tanstack/react-query"
+import { Edit, PlusCircle } from "lucide-react"
 
-import {
-  IUserCatalogueList,
-  IUserCatalogueSave,
-  UserCatalogueBulkUpdateReq,
-} from "@/types/schema"
 import { useFilter } from "@/hooks/use-filter"
 import { SingleSwitchState } from "@/hooks/use-switch"
 import useTable from "@/hooks/use-table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 import { TableCell, TableRow } from "@/components/ui/table"
 import CustomBulkAction from "@/components/custom-bulk-action"
@@ -42,10 +37,7 @@ import CustomTable from "@/components/custom-table"
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
-    title: "Dashboard",
-    href: ROUTES.dashboard,
-  },
-  {
+    key: "user_catalogue",
     title: "Quản lý nhóm thành viên",
     href: ROUTES.user_catalogue,
   },
@@ -149,7 +141,7 @@ const TableRowComponent = React.memo(
           </TableCell>
           <TableCell className="text-center">
             <div className="flex items-center justify-center space-x-1">
-              <Link href={ROUTES.user_catalogue_edit.replace("[id]", item.id)}>
+              <Link href={ROUTES.user_catalogue_edit(item.id)}>
                 <Button
                   type="button"
                   className="size-7 cursor-pointer rounded-[5px] bg-[#0088FF] p-0"
@@ -165,6 +157,7 @@ const TableRowComponent = React.memo(
     )
   }
 )
+TableRowComponent.displayName = "TableRowComponent"
 
 type DeleteActionComponentProps = {
   item: IUserCatalogueList
@@ -195,7 +188,6 @@ const DeleteActionComponent = ({ item }: DeleteActionComponentProps) => {
     />
   )
 }
-
 const renderDeleteAction = (item: IUserCatalogueList) => (
   <DeleteActionComponent item={item} />
 )
@@ -250,7 +242,6 @@ const BulkActionComponent = ({
     />
   )
 }
-
 const renderBulkAction = (
   selectedIds: string[],
   setSelectedIds: (ids: string[]) => void
@@ -261,7 +252,7 @@ const renderBulkAction = (
   />
 )
 
-export default function UserCatalogue() {
+const UserCatalogue = () => {
   const searchParams = useSearchParams()
 
   const { useGetUserList, useGetUserCatalogueList } = useUserCatalogue()
@@ -271,7 +262,7 @@ export default function UserCatalogue() {
     data: userCatalogueListData,
     isPending: isUserCatalogueListPending,
     isFetching: isUserCatalogueListFetching,
-  } = useGetUserCatalogueList(`${searchParams.toString()}&ordering=id`)
+  } = useGetUserCatalogueList(searchParams.toString())
 
   const users = userListData?.results
   const allFilters = useFilter({
@@ -295,84 +286,89 @@ export default function UserCatalogue() {
   })
 
   return (
-    <AppLayout breadcrumbs={breadcrumbs}>
-      <div className="page-wrapper flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl">
-        <CustomPageHeading
-          heading={pageConfig.heading}
-          breadcrumbs={breadcrumbs}
-        />
+    <div className="page-wrapper flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl">
+      <CustomPageHeading
+        heading={pageConfig.heading}
+        breadcrumbs={breadcrumbs}
+      />
 
-        <div className="page-container">
-          <CustomCard
-            title={pageConfig.cardHeading}
-            description={pageConfig.cardDescription}
-            isShowFooter
-            footerChildren={
-              <CustomPagination
-                records={userCatalogueListData}
+      <div className="page-container">
+        <CustomCard
+          title={pageConfig.cardHeading}
+          description={pageConfig.cardDescription}
+          isShowFooter
+          footerChildren={
+            <CustomPagination
+              records={userCatalogueListData}
+              rootPath={ROUTES.user_catalogue}
+            />
+          }
+        >
+          <div className="mb-2.5 flex items-center justify-between">
+            <div className="flex items-center gap-[10px]">
+              {selectedIds.length > 0 &&
+                renderBulkAction(selectedIds, setSelectedIds)}
+              <CustomFilter
+                filters={allFilters}
+                searchParams={searchParams}
+                isLoading={isUserCatalogueListPending}
                 rootPath={ROUTES.user_catalogue}
               />
-            }
-          >
-            <div className="mb-2.5 flex items-center justify-between">
-              <div className="flex items-center gap-[10px]">
-                {selectedIds.length > 0 &&
-                  renderBulkAction(selectedIds, setSelectedIds)}
-                <CustomFilter
-                  filters={allFilters}
-                  searchParams={searchParams}
-                  isLoading={isUserCatalogueListPending}
-                />
-              </div>
-              <Link href={ROUTES.user_catalogue_create}>
-                <Button className="rounded-[5px] bg-[#ed5565] shadow hover:bg-[#ed5565]/80">
-                  <PlusCircle />
-                  <span>Thêm nhóm thành viên</span>
-                </Button>
-              </Link>
             </div>
-            <CustomTable
-              columns={[
-                {
-                  key: "checkbox",
-                  label: (
-                    <Input
-                      type="checkbox"
-                      className="size-4 cursor-pointer bg-red-500"
-                      checked={isAllSelected}
-                      onChange={(e) => {
-                        handleSelectAll(e.target.checked)
-                      }}
-                    />
-                  ),
-                  className: "w-[60px]",
-                },
-                ...(pageConfig.columns ?? []).filter(
-                  (col) => col.key !== "checkbox"
+            <Link href={ROUTES.user_catalogue_save}>
+              <Button className="rounded-[5px] bg-[#ed5565] shadow hover:bg-[#ed5565]/80">
+                <PlusCircle />
+                <span>Thêm nhóm thành viên</span>
+              </Button>
+            </Link>
+          </div>
+          <CustomTable
+            columns={[
+              {
+                key: "checkbox",
+                label: (
+                  <Input
+                    type="checkbox"
+                    className="size-4 cursor-pointer bg-red-500"
+                    checked={isAllSelected}
+                    onChange={(e) => {
+                      handleSelectAll(e.target.checked)
+                    }}
+                  />
                 ),
-              ]}
-              data={userCatalogueListData?.results}
-              render={(item) => (
-                <TableRowComponent
-                  key={item.id}
-                  item={item}
-                  isSelected={selectedIds.includes(item.id)}
-                  switchState={getSwitchState(item.id)}
-                  renderDeleteAction={renderDeleteAction}
-                  mustBeMemoOnSwitchChange={handleSwitchChange}
-                  mustBeMemoOnSelectOne={handleSelectOne}
-                />
-              )}
-              isLoading={isUserCatalogueListPending}
-              isRefreshing={
-                !isUserCatalogueListPending && isUserCatalogueListFetching
-              }
-            />
-          </CustomCard>
-        </div>
+                className: "w-[60px]",
+              },
+              ...(pageConfig.columns ?? []).filter(
+                (col) => col.key !== "checkbox"
+              ),
+            ]}
+            data={userCatalogueListData?.results}
+            render={(item) => (
+              <TableRowComponent
+                key={item.id}
+                item={item}
+                isSelected={selectedIds.includes(item.id)}
+                switchState={getSwitchState(item.id)}
+                renderDeleteAction={renderDeleteAction}
+                mustBeMemoOnSwitchChange={handleSwitchChange}
+                mustBeMemoOnSelectOne={handleSelectOne}
+              />
+            )}
+            isLoading={isUserCatalogueListPending}
+            isRefreshing={
+              !isUserCatalogueListPending && isUserCatalogueListFetching
+            }
+          />
+        </CustomCard>
       </div>
-    </AppLayout>
+    </div>
   )
 }
 
-TableRowComponent.displayName = "TableRowComponent"
+export default function UserCataloguePage() {
+  return (
+    <Suspense fallback={<Skeleton className="h-full w-full" />}>
+      <UserCatalogue />
+    </Suspense>
+  )
+}

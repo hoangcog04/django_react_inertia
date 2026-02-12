@@ -56,7 +56,7 @@ export default function Login() {
     login(data, {
       onSuccess: () => {
         toast.success("Login successful")
-        router.push(ROUTES.dashboard)
+        router.push(ROUTES.user_catalogue)
       },
     })
   })
@@ -156,10 +156,10 @@ export default function Login() {
               type="submit"
               className="mt-4 w-full"
               tabIndex={4}
-              // disabled={processing}
+              disabled={isPending}
               data-test="login-button"
             >
-              {/* {processing && <Spinner />} */}
+              {isPending && <Spinner />}
               Log in
             </Button>
           </div>

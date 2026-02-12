@@ -1,6 +1,7 @@
 import { type ComponentPropsWithoutRef } from "react"
 import { type NavItem } from "@/types"
 import { resolveUrl } from "@/utils/helpers"
+import { BookOpen, Folder } from "lucide-react"
 
 import {
   SidebarGroup,
@@ -11,13 +12,23 @@ import {
 } from "@/components/ui/sidebar"
 import { Icon } from "@/components/icon"
 
+const footerNavItems: NavItem[] = [
+  {
+    title: "Repository",
+    href: "https://github.com/laravel/react-starter-kit",
+    icon: Folder,
+  },
+  {
+    title: "Documentation",
+    href: "https://laravel.com/docs/starter-kits#react",
+    icon: BookOpen,
+  },
+]
+
 export function NavFooter({
-  items,
   className,
   ...props
-}: ComponentPropsWithoutRef<typeof SidebarGroup> & {
-  items: NavItem[]
-}) {
+}: ComponentPropsWithoutRef<typeof SidebarGroup>) {
   return (
     <SidebarGroup
       {...props}
@@ -25,7 +36,7 @@ export function NavFooter({
     >
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map((item) => (
+          {footerNavItems.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 asChild

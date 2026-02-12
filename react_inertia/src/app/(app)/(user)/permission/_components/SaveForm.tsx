@@ -4,22 +4,20 @@ import React, { useEffect, useMemo } from "react"
 import { useParams } from "next/navigation"
 import { ROUTES, TOAST_TEXT } from "@/constants"
 import {
-  userCatalogueKeys,
-  useUpdateUserCatalogue,
-  useUserCatalogue,
-} from "@/services/use-user-catalogue"
+  IPermissionSave,
+  permissionKeys,
+  usePermission,
+  useUpdatePermission,
+} from "@/services/use-permission"
 import { type FormPageConfig } from "@/types"
 import { customSlugify } from "@/utils/helpers"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useQueryClient } from "@tanstack/react-query"
-import { Loader2 } from "lucide-react"
 import { useRouter } from "next13-progressbar"
 import { useForm, useWatch } from "react-hook-form"
 import { toast } from "react-toastify"
 import * as z from "zod"
 
-import { IUserCatalogueSave } from "@/types/schema"
-import axios from "@/lib/axios"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -35,17 +33,17 @@ import { Textarea } from "@/components/ui/textarea"
 import CustomCard from "@/components/custom-card"
 import CustomNotice from "@/components/custom-notice"
 
-const userCatalogueSchema = z.object({
+const permissionSchema = z.object({
   name: z.string().min(1, { error: "Tên nhóm thành viên là bắt buộc" }),
   canonical: z
     .string()
     .min(1, { error: "Từ khóa nhóm thành viên là bắt buộc" }),
   description: z.string().optional(),
 })
-type TUserCatalogue = z.infer<typeof userCatalogueSchema>
+type TPermission = z.infer<typeof permissionSchema>
 
-const formPageConfig: FormPageConfig<TUserCatalogue> = {
-  // schema: userCatalogueSchema,
+const formPageConfig: FormPageConfig<TPermission> = {
+  // schema: permissionSchema,
   defaultValues: {
     name: "",
     canonical: "",
@@ -62,8 +60,8 @@ export default function SaveForm({ isEdit = false }: SaveFormProps) {
   const params = useParams()
   const id = isEdit ? (params.id as string) : null
 
-  const form = useForm<TUserCatalogue>({
-    resolver: zodResolver(userCatalogueSchema),
+  const form = useForm<TPermission>({
+    resolver: zodResolver(permissionSchema),
     defaultValues: formPageConfig.defaultValues,
   })
   const canonical = useWatch({ control: form.control, name: "canonical" })
@@ -73,14 +71,12 @@ export default function SaveForm({ isEdit = false }: SaveFormProps) {
   )
 
   const queryClient = useQueryClient()
-  const { useSaveUserCatalogue, useGetUserCatalogue } = useUserCatalogue()
-  const { mutate: saveUserCatalogue, isPending: isSaveUserCataloguePending } =
-    useSaveUserCatalogue()
-  const {
-    mutate: updateUserCatalogue,
-    isPending: isUpdateUserCataloguePending,
-  } = useUpdateUserCatalogue()
-  const { data, isLoading: isGetUserCatalogueLoading } = useGetUserCatalogue(
+  const { useSavePermission, useGetPermission } = usePermission()
+  const { mutate: savePermission, isPending: isSavePermissionPending } =
+    useSavePermission()
+  const { mutate: updatePermission, isPending: isUpdatePermissionPending } =
+    useUpdatePermission()
+  const { data, isLoading: isGetPermissionLoading } = useGetPermission(
     id as string,
     isEdit && !!id
   )
@@ -95,21 +91,21 @@ export default function SaveForm({ isEdit = false }: SaveFormProps) {
     }
   }, [data, form, isEdit])
 
-  const handleSave = form.handleSubmit((d: IUserCatalogueSave) => {
+  const handleSave = form.handleSubmit((d: IPermissionSave) => {
     if (isEdit) {
-      updateUserCatalogue(
+      updatePermission(
         { id: id as string, data: d },
         {
           onSuccess: () => {
             toast.success(TOAST_TEXT.USER_CATALOGUE_SAVE_SUCCESS)
             queryClient.invalidateQueries({
-              queryKey: userCatalogueKeys.get(id as string),
+              queryKey: permissionKeys.get(id as string),
             })
           },
         }
       )
     } else {
-      saveUserCatalogue(d, {
+      savePermission(d, {
         onSuccess: () => {
           toast.success(TOAST_TEXT.USER_CATALOGUE_SAVE_SUCCESS)
           form.reset()
@@ -117,25 +113,25 @@ export default function SaveForm({ isEdit = false }: SaveFormProps) {
       })
     }
   })
-  const handleSaveAndClose = form.handleSubmit((d: IUserCatalogueSave) => {
+  const handleSaveAndClose = form.handleSubmit((d: IPermissionSave) => {
     if (isEdit) {
-      updateUserCatalogue(
+      updatePermission(
         { id: id as string, data: d },
         {
           onSuccess: () => {
             toast.success(TOAST_TEXT.USER_CATALOGUE_SAVE_SUCCESS)
             queryClient.invalidateQueries({
-              queryKey: userCatalogueKeys.get(id as string),
+              queryKey: permissionKeys.get(id as string),
             })
-            router.push(ROUTES.user_catalogue)
+            router.push(ROUTES.permission)
           },
         }
       )
     } else {
-      saveUserCatalogue(d, {
+      savePermission(d, {
         onSuccess: () => {
           toast.success(TOAST_TEXT.USER_CATALOGUE_SAVE_AND_CLOSE_SUCCESS)
-          router.push(ROUTES.user_catalogue)
+          router.push(ROUTES.permission)
         },
       })
     }
@@ -149,10 +145,10 @@ export default function SaveForm({ isEdit = false }: SaveFormProps) {
       <div className="relative col-span-7">
         <Form {...form}>
           <form>
-            <fieldset disabled={isGetUserCatalogueLoading}>
+            <fieldset disabled={isGetPermissionLoading}>
               <CustomCard
-                title="Thông tin nhóm thành viên"
-                description="Nhập thông tin nhóm thành viên"
+                title="Thông tin quyền"
+                description="Nhập thông tin quyền"
               >
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-1">
@@ -161,9 +157,7 @@ export default function SaveForm({ isEdit = false }: SaveFormProps) {
                       name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel htmlFor="name">
-                            Tên nhóm thành viên
-                          </FormLabel>
+                          <FormLabel htmlFor="name">Tên quyền</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -171,7 +165,7 @@ export default function SaveForm({ isEdit = false }: SaveFormProps) {
                               type="text"
                               name="name"
                               tabIndex={1}
-                              placeholder="Nhập tên nhóm thành viên"
+                              placeholder="Nhập tên quyền"
                             />
                           </FormControl>
                           <FormMessage />
@@ -186,7 +180,7 @@ export default function SaveForm({ isEdit = false }: SaveFormProps) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel htmlFor="canonical">
-                            Từ khóa nhóm thành viên
+                            Từ khóa quyền
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -195,7 +189,7 @@ export default function SaveForm({ isEdit = false }: SaveFormProps) {
                               type="text"
                               name="canonical"
                               tabIndex={2}
-                              placeholder="Nhập từ khóa nhóm thành viên"
+                              placeholder="Nhập từ khóa quyền"
                             />
                           </FormControl>
                           <FormMessage />
@@ -243,8 +237,7 @@ export default function SaveForm({ isEdit = false }: SaveFormProps) {
                       type="button"
                       className="cursor-pointer rounded-[5px] font-light"
                       disabled={
-                        isSaveUserCataloguePending ||
-                        isUpdateUserCataloguePending
+                        isSavePermissionPending || isUpdatePermissionPending
                       }
                       onClick={handleSave}
                     >
@@ -254,8 +247,7 @@ export default function SaveForm({ isEdit = false }: SaveFormProps) {
                       type="button"
                       className="cursor-pointer rounded-[5px] bg-[#1a7bb9] font-light"
                       disabled={
-                        isSaveUserCataloguePending ||
-                        isUpdateUserCataloguePending
+                        isSavePermissionPending || isUpdatePermissionPending
                       }
                       onClick={handleSaveAndClose}
                     >

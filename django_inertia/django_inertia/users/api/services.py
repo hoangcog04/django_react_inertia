@@ -9,6 +9,7 @@ from django_inertia.common.services import model_get
 from django_inertia.common.services import model_list
 from django_inertia.common.services import model_soft_delete
 from django_inertia.common.services import model_update
+from django_inertia.users.models import Permission
 from django_inertia.users.models import UserCatalogue
 
 
@@ -125,6 +126,122 @@ def user_catalogue_bulk_update(
     instances = list(user_catalogue_list(ids=entity_id_list))
     count, _ = model_bulk_update(
         model=UserCatalogue,
+        instances=instances,
+        data=data,
+        fields=fields_to_update,
+    )
+
+    # after save hook
+    _after_save(_=None)
+
+    return count
+
+
+def permission_get(*, entity_id, with_relation: list[str] | None = None):
+    return model_get(
+        model_or_queryset=Permission,
+        entity_id=entity_id,
+        with_relation=with_relation,
+    )
+
+
+def permission_list(
+    *,
+    ids: list[str] | None = None,
+    with_relation: list[str] | None = None,
+):
+    if ids is not None:
+        queryset = Permission.objects.filter(id__in=ids)
+    else:
+        queryset = Permission.objects.all()
+
+    return model_list(queryset=queryset, with_relation=with_relation)
+
+
+@transaction.atomic
+def permission_save(
+    *,
+    request,
+    data,
+    entity_id=None,
+):
+    """
+    Updates an existing record (when entity_id is provided)
+    or creates a new record of Permission.
+    Returns:
+        The saved Permission model instance (the created or updated instance).
+    """
+
+    # prepare model data
+    data["creator_id"] = request.user.id
+
+    # before save hook
+    _before_save(_=None)
+
+    # save or update
+    res = None
+    if entity_id is not None:
+        permission = permission_get(entity_id=entity_id)
+        res, _ = model_update(instance=permission, data=data)
+    else:
+        res = Permission.objects.create(**data)
+
+    # after save hook
+    _after_save(_=None)
+
+    return res
+
+
+@transaction.atomic
+def permission_delete(
+    *,
+    entity_id,
+) -> bool:
+    # prepare model data
+    # before save hook
+    _before_save(_=None)
+
+    instance = permission_get(entity_id=entity_id)
+    deleted = model_soft_delete(instance=instance)
+
+    # after save hook
+    _after_save(_=None)
+
+    return deleted
+
+
+@transaction.atomic
+def permission_bulk_delete(
+    *,
+    entity_id_list: list[str],
+) -> bool:
+    # prepare model data
+    # before save hook
+    _before_save(_=None)
+
+    count = model_bulk_delete(model_or_queryset=Permission, ids=entity_id_list)
+
+    # after save hook
+    _after_save(_=None)
+
+    return count > 0
+
+
+@log_queries
+@transaction.atomic
+def permission_bulk_update(
+    *,
+    entity_id_list: list[str],
+    data: dict[str, Any],
+    fields_to_update: list[str] | None = None,
+) -> int:
+    # prepare model data
+    # before save hook
+    _before_save(_=None)
+
+    instances = list(permission_list(ids=entity_id_list))
+    count, _ = model_bulk_update(
+        model=Permission,
         instances=instances,
         data=data,
         fields=fields_to_update,

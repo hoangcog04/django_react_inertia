@@ -4,8 +4,6 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 from rest_framework.routers import SimpleRouter
 
-from django_inertia.common.views import TestAPI
-
 # from django_inertia.users.api.views import UserViewSet
 
 router = DefaultRouter() if settings.DEBUG else SimpleRouter()
@@ -23,5 +21,4 @@ urlpatterns = router.urls
 
 urlpatterns += [
     path("", include("django_inertia.users.api.urls")),
-    path("test/", TestAPI.as_view()),
 ]

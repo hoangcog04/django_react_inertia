@@ -4,6 +4,8 @@ import type { Metadata } from "next"
 import localFont from "next/font/local"
 import { ThemeProvider } from "next-themes"
 
+import CustomToast from "@/components/custom-toast"
+
 import { Providers } from "./providers"
 
 const geistSans = localFont({
@@ -46,6 +48,7 @@ export default function RootLayout({
         >
           <div className="relative flex min-h-screen flex-col">
             <div className="flex-1">
+              <CustomToast />
               <Providers>{children}</Providers>
             </div>
           </div>

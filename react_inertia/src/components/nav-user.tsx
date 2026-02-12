@@ -1,3 +1,5 @@
+"use client"
+
 // import { useSidebar } from "@/contexts/sidebar-provider"
 import { User, type SharedData } from "@/types"
 // import { usePage } from "@inertiajs/react"

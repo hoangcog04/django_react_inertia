@@ -1,12 +1,11 @@
 "use client"
 
-import React, { useCallback, useEffect, useMemo, useState } from "react"
-import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation"
-import { ROUTES } from "@/constants"
+import React, { useEffect } from "react"
+import { ReadonlyURLSearchParams } from "next/navigation"
 import { IFilter } from "@/types"
 import { Loader2, Search } from "lucide-react"
 import { useRouter } from "next13-progressbar"
-import { Control, Controller, useForm, UseFormSetValue } from "react-hook-form"
+import { Control, Controller, useForm } from "react-hook-form"
 
 import {
   Select,
@@ -94,11 +93,13 @@ type CustomFilterProps = {
   filters?: IFilter[]
   searchParams: ReadonlyURLSearchParams
   isLoading: boolean
+  rootPath: string
 }
 export default function CustomFilter({
   filters = [],
   searchParams,
   isLoading,
+  rootPath,
 }: CustomFilterProps) {
   const router = useRouter()
 
@@ -136,7 +137,7 @@ export default function CustomFilter({
 
     const queryString = params.toString()
     const newUrl = queryString ? `?${queryString}` : ""
-    router.push(`${ROUTES.user_catalogue}${newUrl}`, { scroll: false })
+    router.push(`${rootPath}${newUrl}`, { scroll: false })
   }
 
   return (

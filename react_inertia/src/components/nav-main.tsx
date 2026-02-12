@@ -1,9 +1,12 @@
+"use client"
+
 // import { Link, usePage } from "@inertiajs/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { ROUTES } from "@/constants/route"
 import { type NavItem } from "@/types"
 import { isSameUrl, resolveUrl } from "@/utils/helpers"
-import { ChevronDownIcon, ChevronRight } from "lucide-react"
+import { ChevronRight, LayoutGrid, Shield, Users } from "lucide-react"
 
 import {
   Collapsible,
@@ -21,7 +24,45 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 
-export function NavMain({ items = [] }: { items: NavItem[] }) {
+const mainNavItems: NavItem[] = [
+  {
+    title: "Dashboard",
+    href: ROUTES.dashboard,
+    icon: LayoutGrid,
+  },
+  {
+    title: "Quản lý thành viên",
+    href: ROUTES.void,
+    icon: Users,
+    items: [
+      {
+        title: "Nhóm thành viên",
+        url: ROUTES.user_catalogue,
+      },
+      {
+        title: "Thành viên",
+        url: ROUTES.user,
+      },
+    ],
+  },
+  {
+    title: "Quản lý quyền",
+    href: ROUTES.void,
+    icon: Shield,
+    items: [
+      {
+        title: "Quyền",
+        url: ROUTES.permission,
+      },
+      {
+        title: "Thành viên",
+        url: ROUTES.user,
+      },
+    ],
+  },
+]
+
+export function NavMain() {
   // const page = usePage()
   const pathname = usePathname()
 
@@ -29,7 +70,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
     <SidebarGroup className="px-2 py-0">
       <SidebarGroupLabel>Platform</SidebarGroupLabel>
       <SidebarMenu>
-        {items.map((item) => (
+        {mainNavItems.map((item) => (
           <SidebarMenuItem key={item.title}>
             {item.items && item.items.length > 0 ? (
               <Collapsible

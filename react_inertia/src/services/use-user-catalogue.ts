@@ -1,4 +1,3 @@
-// key, tanstack, service, api, type
 import {
   LimitOffsetPagingResponse,
   PageNumberPagingResponse,
@@ -7,15 +6,41 @@ import {
 } from "@/types"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-import {
-  IUserCatalogueGet,
-  IUserCatalogueList,
-  IUserCatalogueSave,
-  UserCatalogueBulkDeleteReq,
-  UserCatalogueBulkUpdateReq,
-} from "@/types/schema"
+import { IDateTime } from "@/types/common"
 import httpRequest from "@/lib/axios"
 
+// schemas
+export interface UserCatalogueBulkDeleteReq {
+  ids: string[]
+}
+
+export interface IUserCatalogueSave {
+  name?: string
+  canonical?: string
+  description?: string
+  publish?: number
+}
+
+export interface IUserCatalogueGet extends IUserCatalogueSave, IDateTime {
+  id: string
+}
+
+export interface IUserCatalogueList extends IDateTime {
+  id: string
+  name: string
+  canonical: string
+  description: string
+  publish: number
+  creator: User
+}
+
+export interface UserCatalogueBulkUpdateReq {
+  ids: string[]
+  publish?: 1 | 2
+  [key: string]: any
+}
+
+// services
 const saveUserCatalogue = (params: IUserCatalogueSave): Promise<any> => {
   return httpRequest.post("/user_catalogue/save/", params)
 }
@@ -59,6 +84,7 @@ const bulkUpdateUserCatalogue = (
   return httpRequest.put("/user_catalogue/bulk/", params)
 }
 
+// keys
 export const userCatalogueKeys = {
   key: "userCatalogue" as const,
   save: () => [userCatalogueKeys.key, "save"] as const,
@@ -75,6 +101,7 @@ export const userCatalogueKeys = {
     [userCatalogueKeys.key, "user_catalogue_delete", id] as const,
 }
 
+// hooks
 export const useUserCatalogue = () => {
   const queryClient = useQueryClient()
 

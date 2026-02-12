@@ -1,16 +1,18 @@
 // import { usePage } from "@inertiajs/react"
 
-// import { SidebarProvider } from "@/contexts/sidebar-provider"
-import { SharedData } from "@/types"
-
 import { SidebarProvider } from "@/components/ui/sidebar"
 
 interface AppShellProps {
   children: React.ReactNode
   variant?: "header" | "sidebar"
+  defaultOpen?: boolean
 }
 
-export function AppShell({ children, variant = "header" }: AppShellProps) {
+export function AppShell({
+  children,
+  variant = "header",
+  defaultOpen = false,
+}: AppShellProps) {
   // const isOpen = usePage<SharedData>().props.sidebarOpen
 
   if (variant === "header") {
@@ -18,5 +20,5 @@ export function AppShell({ children, variant = "header" }: AppShellProps) {
   }
 
   // temp: always close the sidebar
-  return <SidebarProvider defaultOpen={false}>{children}</SidebarProvider>
+  return <SidebarProvider defaultOpen={defaultOpen}>{children}</SidebarProvider>
 }

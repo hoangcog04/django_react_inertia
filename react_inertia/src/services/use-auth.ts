@@ -2,8 +2,22 @@ import { LS_KEYS } from "@/constants"
 import storage from "@/utils/storage"
 import { useMutation } from "@tanstack/react-query"
 
-import { ILogin, ILoginResponse, IRefreshResp } from "@/types/schema"
 import httpRequest from "@/lib/axios"
+
+export interface ILogin {
+  username: string
+  password: string
+}
+
+export interface ILoginResponse {
+  access: string
+  refresh: string
+}
+
+export interface IRefreshResp {
+  access: string
+  refresh: string
+}
 
 const login = (params: ILogin): Promise<ILoginResponse> => {
   return httpRequest.post("/token/login/", params)
