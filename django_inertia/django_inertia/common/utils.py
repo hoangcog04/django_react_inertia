@@ -6,5 +6,8 @@ _resolve_map = {
 
 
 # https://stackoverflow.com/questions/1605041/django-slug-in-vietnamese
-def custom_slugify(value: str, allow_unicode: bool = False) -> str:  # noqa: FBT001, FBT002
-    return slugify(value.translate(_resolve_map), allow_unicode=allow_unicode)
+def custom_slugify(value: str, allow_unicode: bool = True) -> str:  # noqa: FBT001, FBT002
+    return slugify(
+        value.translate(_resolve_map).replace(":", "COLON"),
+        allow_unicode=allow_unicode,
+    ).replace("colon", ":")
