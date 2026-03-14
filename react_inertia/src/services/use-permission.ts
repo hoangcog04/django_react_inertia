@@ -103,13 +103,6 @@ export const usePermission = () => {
     })
   }
 
-  const useGetPermissionList = (params?: string) => {
-    return useQuery({
-      queryKey: permissionKeys.permission_list(params),
-      queryFn: () => getPermissionList(params),
-    })
-  }
-
   const useDeletePermission = () => {
     return useMutation({
       mutationFn: (id: string) => deletePermission(id),
@@ -126,9 +119,15 @@ export const usePermission = () => {
   return {
     useSavePermission,
     useGetPermission,
-    useGetPermissionList,
     useDeletePermission,
   }
+}
+
+export const useGetPermissionList = (params?: string) => {
+  return useQuery({
+    queryKey: permissionKeys.permission_list(params),
+    queryFn: () => getPermissionList(params),
+  })
 }
 
 export const useUpdatePermission = () => {

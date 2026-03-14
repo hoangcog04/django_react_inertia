@@ -67,7 +67,7 @@ type SwitchField = NonNullable<typeof pageConfig.switches>[number]
 type UpdateUserCatalogueFn = UseMutateFunction<
   any,
   Error,
-  { id: string; data: IUserCatalogueSave },
+  { paramId: string; data: IUserCatalogueSave },
   unknown
 >
 
@@ -127,7 +127,7 @@ const TableRowComponent = React.memo(
           </TableCell>
           <TableCell className="text-center">
             <Switch
-              checked={String(effectiveSwitches) === "2" ? true : false}
+              checked={String(effectiveSwitches) === "2" ? false : true}
               onCheckedChange={() => {
                 mustBeMemoOnSwitchChange(
                   item.id,
@@ -264,10 +264,9 @@ const UserCatalogue = () => {
     isFetching: isUserCatalogueListFetching,
   } = useGetUserCatalogueList(searchParams.toString())
 
-  const users = userListData?.results
   const allFilters = useFilter({
     pageFilters: pageConfig.filters,
-    users,
+    users: userListData?.results,
     statusFilters: new Map([["creator_id", isUserListPending]]),
   })
 

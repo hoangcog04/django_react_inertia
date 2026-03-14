@@ -48,6 +48,8 @@ def user_catalogue_save(
     request,
     data,
     entity_id=None,
+    handle_m2m=False,
+    m2m_fields: list[str] | None = None,
 ):
     """
     Updates an existing record (when entity_id is provided)
@@ -57,18 +59,28 @@ def user_catalogue_save(
     """
 
     # prepare model data
-    data["creator_id"] = request.user.id
+    data["creator"] = request.user
 
     # before save hook
     _before_save(_=None)
 
+    print("data", data)
     # save or update
     res = None
     if entity_id is not None:
         user_catalogue = user_catalogue_get(entity_id=entity_id)
         res, _ = model_update(instance=user_catalogue, data=data)
-    else:
+    elif not handle_m2m:
         res = UserCatalogue.objects.create(**data)
+    elif m2m_fields is not None:
+        m2m_data = {}
+        for m2m_field in m2m_fields:
+            # remove from **data for save model first
+            m2m_data[m2m_field] = data.pop(m2m_field)
+        res = UserCatalogue.objects.create(**data)
+        for field_name, value in m2m_data.items():
+            related_manager = getattr(res, field_name)
+            related_manager.set(value)
 
     # after save hook
     _after_save(_=None)

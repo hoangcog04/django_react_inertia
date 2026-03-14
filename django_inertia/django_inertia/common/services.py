@@ -9,6 +9,7 @@ DjangoModelType = TypeVar("DjangoModelType", bound=models.Model)
 
 
 # https://docs.astral.sh/ruff/rules/non-pep695-generic-function/
+# ref: https://github.com/HackSoftware/Django-Styleguide-Example/blob/a70ef43d7df03706c1211d4fcfd70b4b0120ba1e/styleguide_example/common/services.py
 def model_update[DjangoModelType: models.Model](
     *,
     instance: DjangoModelType,
@@ -18,11 +19,25 @@ def model_update[DjangoModelType: models.Model](
     if fields is None:
         fields = list(data.keys())
 
+    # handle m2m fields
+    m2m_data = {}
     has_updated = False
     update_fields = []
 
+    model_fields = {field.name: field for field in instance._meta.get_fields()}
+
     for field in fields:
         if field not in data:
+            continue
+
+        model_field = model_fields.get(field)
+
+        assert model_field is not None, (
+            f"{field} is not part of {instance.__class__.__name__} fields."
+        )
+
+        if isinstance(model_field, models.ManyToManyField):
+            m2m_data[field] = data[field]
             continue
         if getattr(instance, field) != data[field]:
             has_updated = True
@@ -31,6 +46,14 @@ def model_update[DjangoModelType: models.Model](
     if has_updated:
         instance.full_clean()
         instance.save(update_fields=update_fields)
+
+    for field_name, value in m2m_data.items():
+        related_manager = getattr(instance, field_name)
+        related_manager.set(value)
+
+        # What if we only update m2m relations & nothing on the model?
+        # Is this still considered as updated?
+        has_updated = True
 
     return instance, has_updated
 

@@ -1,6 +1,7 @@
 import React from "react"
 import { Loader2 } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import {
   Card,
   CardContent,
@@ -19,6 +20,7 @@ type CustomCardProps = {
   isShowFooter?: boolean
   children: React.ReactNode
   footerChildren?: React.ReactNode
+  className?: string
 }
 
 export default function CustomCard({
@@ -30,9 +32,12 @@ export default function CustomCard({
   isShowFooter = false,
   children,
   footerChildren,
+  className,
 }: CustomCardProps) {
   return (
-    <Card className="relative gap-4 overflow-hidden rounded-[5px]">
+    <Card
+      className={cn("relative gap-4 overflow-hidden rounded-[5px]", className)}
+    >
       {isShowHeader && (
         <CardHeader>
           <CardTitle>{title}</CardTitle>

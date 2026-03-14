@@ -18,7 +18,8 @@ export interface IUserCatalogueSave {
   name?: string
   canonical?: string
   description?: string
-  publish?: number
+  // publish?: number
+  permissions: number[]
 }
 
 export interface IUserCatalogueGet extends IUserCatalogueSave, IDateTime {
@@ -62,10 +63,10 @@ const getUserCatalogueList = (
 }
 
 const updateUserCatalogue = (
-  id: string,
+  paramId: string,
   params: IUserCatalogueSave
 ): Promise<any> => {
-  return httpRequest.put(`/user_catalogue/${id}/save/`, params)
+  return httpRequest.put(`/user_catalogue/${paramId}/save/`, params)
 }
 
 const deleteUserCatalogue = (id: string): Promise<any> => {
@@ -155,8 +156,8 @@ export const useUserCatalogue = () => {
 
 export const useUpdateUserCatalogue = () => {
   return useMutation({
-    mutationFn: (params: { id: string; data: IUserCatalogueSave }) =>
-      updateUserCatalogue(params.id, params.data),
+    mutationFn: (params: { paramId: string; data: IUserCatalogueSave }) =>
+      updateUserCatalogue(params.paramId, params.data),
   })
 }
 

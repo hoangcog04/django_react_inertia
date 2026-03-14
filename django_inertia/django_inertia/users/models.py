@@ -42,37 +42,6 @@ class Publish(models.IntegerChoices):
     UNPUBLISHED = 2, "2"
 
 
-class UserCatalogue(BaseModel):
-    """Category to classify users (e.g., Admin, Editor, Member...)"""
-
-    name = models.CharField(_("Name"), max_length=255)
-    canonical = models.CharField(_("Canonical"), max_length=255, unique=True)
-    description = models.TextField(_("Description"), default="", blank=True)
-    creator = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        # fetch catalogues created by a user: my_user.created_catalogues.all()
-        related_name="created_catalogues",
-        db_column="user_id",
-        verbose_name=_("Creator"),
-    )
-    publish = models.IntegerField(choices=Publish.choices, default=Publish.UNPUBLISHED)
-
-    class Meta:
-        verbose_name = _("User Catalogue")
-        verbose_name_plural = _("User Catalogues")
-        constraints = [
-            models.CheckConstraint(
-                name="%(app_label)s_%(class)s_publish_valid",
-                condition=models.Q(publish__in=Publish.values),
-            ),
-        ]
-
-    def __str__(self):
-        return f"{self.name}"
-
-
 class Permission(BaseModel):
     name = models.CharField(max_length=255)
     canonical = models.CharField(_("Canonical"), max_length=255, unique=True)
@@ -89,6 +58,42 @@ class Permission(BaseModel):
     class Meta:
         verbose_name = _("Permission")
         verbose_name_plural = _("Permissions")
+        constraints = [
+            models.CheckConstraint(
+                name="%(app_label)s_%(class)s_publish_valid",
+                condition=models.Q(publish__in=Publish.values),
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.name}"
+
+
+class UserCatalogue(BaseModel):
+    """Category to classify users (e.g., Admin, Editor, Member...)"""
+
+    name = models.CharField(_("Name"), max_length=255)
+    canonical = models.CharField(_("Canonical"), max_length=255, unique=True)
+    description = models.TextField(_("Description"), default="", blank=True)
+    creator = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        # fetch catalogues created by a user: my_user.created_catalogues.all()
+        related_name="created_catalogues",
+        db_column="user_id",
+        verbose_name=_("Creator"),
+    )
+    publish = models.IntegerField(choices=Publish.choices, default=Publish.UNPUBLISHED)
+    permissions = models.ManyToManyField(
+        Permission,
+        related_name="user_catalogues",
+        blank=True,
+    )
+
+    class Meta:
+        verbose_name = _("User Catalogue")
+        verbose_name_plural = _("User Catalogues")
         constraints = [
             models.CheckConstraint(
                 name="%(app_label)s_%(class)s_publish_valid",

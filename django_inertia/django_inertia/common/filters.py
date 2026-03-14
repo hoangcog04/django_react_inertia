@@ -47,6 +47,7 @@ class SearchableFilter(django_filters.FilterSet):
         q_objects = Q()
         for field in self.searchable_fields:
             if isinstance(field, str):
+                # **kargs, unpack the dictionary into keyword arguments
                 q_objects |= Q(**{f"{field}__{lookup_type}": value})
 
         return queryset.filter(q_objects)

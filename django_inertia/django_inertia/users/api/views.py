@@ -89,7 +89,13 @@ class UserCatalogueSaveApi(APIView):
     class InputSerializer(serializers.ModelSerializer):
         class Meta:
             model = UserCatalogue
-            fields = ["name", "canonical", "description", "publish"]
+            fields = [
+                "name",
+                "canonical",
+                "description",
+                # "publish",
+                "permissions",
+            ]
             # disable unique validator to use custom one
             # because slugify is only applied in validate_canonical
             extra_kwargs: dict = {"canonical": {"validators": []}}
@@ -111,6 +117,9 @@ class UserCatalogueSaveApi(APIView):
             fields = ["id", "name", "canonical", "description"]
 
     def post(self, request):
+        handle_m2m = True
+        m2m_fields = ["permissions"]
+
         serializer = self.InputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         # You must now use the .validated_data attribute
@@ -118,6 +127,8 @@ class UserCatalogueSaveApi(APIView):
         user_catalogue = user_catalogue_save(
             request=request,
             data=serializer.validated_data,
+            handle_m2m=handle_m2m,
+            m2m_fields=m2m_fields,
         )
         data = self.OutputSerializer(user_catalogue).data
 
@@ -490,6 +501,7 @@ class PermissionListApi(APIView):
             fields = [
                 "id",
                 "name",
+                "canonical",
                 "description",
                 "publish",
                 "creator",

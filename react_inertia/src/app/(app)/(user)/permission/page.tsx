@@ -11,6 +11,7 @@ import {
   PermissionBulkUpdateReq,
   useBulkDeletePermission,
   useBulkUpdatePermission,
+  useGetPermissionList,
   usePermission,
   useUpdatePermission,
 } from "@/services/use-permission"
@@ -128,7 +129,7 @@ const TableRowComponent = React.memo(
           </TableCell>
           <TableCell className="text-center">
             <Switch
-              checked={String(effectiveSwitches) === "2" ? true : false}
+              checked={String(effectiveSwitches) === "2" ? false : true}
               onCheckedChange={() => {
                 mustBeMemoOnSwitchChange(
                   item.id,
@@ -254,7 +255,6 @@ const renderBulkAction = (
 const Permission = () => {
   const searchParams = useSearchParams()
 
-  const { useGetPermissionList } = usePermission()
   const { useGetUserList } = useUserCatalogue()
   const { mutate: updatePermission } = useUpdatePermission()
   const { data: userListData, isPending: isUserListPending } = useGetUserList()

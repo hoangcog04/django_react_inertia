@@ -27,7 +27,6 @@ const config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
-
         card: {
           DEFAULT: "var(--card)",
           foreground: "var(--card-foreground)",
@@ -59,7 +58,6 @@ const config = {
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
-
         chart: {
           1: "var(--chart-1)",
           2: "var(--chart-2)",
@@ -67,7 +65,6 @@ const config = {
           4: "var(--chart-4)",
           5: "var(--chart-5)",
         },
-
         sidebar: {
           DEFAULT: "var(--sidebar)",
           foreground: "var(--sidebar-foreground)",
@@ -82,6 +79,28 @@ const config = {
           border: "var(--sidebar-border)",
           ring: "var(--sidebar-ring)",
         },
+      },
+      keyframes: {
+        "accordion-down": {
+          from: {
+            height: "0",
+          },
+          to: {
+            height: "var(--radix-accordion-content-height)",
+          },
+        },
+        "accordion-up": {
+          from: {
+            height: "var(--radix-accordion-content-height)",
+          },
+          to: {
+            height: "0",
+          },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
       },
     },
   },
